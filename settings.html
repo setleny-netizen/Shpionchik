@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Настройки - Шпион</title>
+    
+    <!-- Font Awesome для значков -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Шпионские шрифты -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Ubuntu+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/шляпа.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="img/шляпа.png">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Ubuntu Mono', monospace;
+            min-height: 100vh;
+            position: relative;
+            color: white;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Фон с размытием */
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('img/fon2.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: -2;
+        }
+
+        /* Слой для размытия */
+        .blur-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.05);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: -1;
+        }
+
+        /* Основной контейнер по центру */
+        .settings-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 40px;
+            width: 100%;
+        }
+
+        /* Заголовок */
+        .settings-title {
+            font-family: 'Russo One', sans-serif;
+            font-size: 3rem;
+            margin-bottom: 30px;
+            color: white;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            letter-spacing: 1px;
+        }
+
+        .settings-title i {
+            margin-right: 15px;
+        }
+
+        /* Блок "В разработке" */
+        .development-box {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            padding: 60px 40px;
+            margin: 30px 0;
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        /* Иконка шестеренки */
+        .gear-icon {
+            margin-bottom: 20px;
+        }
+
+        .gear-icon i {
+            animation: rotate 3s linear infinite;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Текст "В разработке" */
+        .development-text {
+            font-family: 'Russo One', sans-serif;
+            font-size: 2.5rem;
+            margin-bottom: 25px;
+            color: white;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Описание */
+        .development-description {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            opacity: 0.9;
+            max-width: 500px;
+            margin: 0 auto;
+            text-align: left;
+        }
+
+        .development-description i {
+            margin-right: 10px;
+            color: #ffcc00;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Версия игры */
+        .version-info {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            font-size: 0.9rem;
+            opacity: 0.7;
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.8);
+            background: rgba(0, 0, 0, 0.2);
+            padding: 5px 10px;
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+        }
+
+        /* Кнопка назад */
+        .back-button-container {
+            margin-top: 40px;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 15px 30px;
+            background-color: #ffffff;
+            color: rgb(0, 0, 0);
+            text-decoration: none;
+            border-radius: 50px;
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 400;
+            border: none;
+            cursor: pointer;
+            min-width: 200px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .back-button i {
+            font-size: 1.3rem;
+        }
+
+        /* Анимация появления */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .settings-title {
+            animation: fadeIn 0.8s ease forwards;
+        }
+
+        .development-box {
+            animation: fadeIn 1s ease 0.2s forwards;
+            opacity: 0;
+        }
+
+        .back-button-container {
+            animation: fadeIn 1s ease 0.4s forwards;
+            opacity: 0;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .settings-container {
+                padding: 20px;
+            }
+            
+            .settings-title {
+                font-size: 2.2rem;
+            }
+            
+            .development-box {
+                padding: 40px 20px;
+            }
+            
+            .development-text {
+                font-size: 2rem;
+            }
+            
+            .development-description {
+                font-size: 1.1rem;
+                line-height: 1.6;
+            }
+            
+            .version-info {
+                position: relative;
+                bottom: auto;
+                right: auto;
+                margin-top: 20px;
+                text-align: center;
+                width: 100%;
+            }
+            
+            .back-button {
+                padding: 12px 25px;
+                font-size: 1.3rem;
+                min-width: 180px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .settings-title {
+                font-size: 1.8rem;
+            }
+            
+            .development-text {
+                font-size: 1.6rem;
+            }
+            
+            .development-description {
+                font-size: 1rem;
+                line-height: 1.5;
+            }
+            
+            .back-button {
+                padding: 10px 20px;
+                font-size: 1.2rem;
+                min-width: 160px;
+            }
+            
+            .gear-icon i {
+                font-size: 3rem !important;
+            }
+            
+            .version-info {
+                font-size: 0.8rem;
+                padding: 4px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+<div class="background"></div>
+<div class="blur-overlay"></div>
+
+<div class="settings-container">
+    <h1 class="settings-title">
+        <i class="fas fa-cog"></i> Настройки
+    </h1>
+    
+    <div class="development-box">        
+        <div class="development-text gear-icon"> <i class="fas fa-cog"></i> В РАЗРАБОТКЕ</div>
+        
+        <div class="development-description">
+            <i class="fas fa-volume-up"></i> Громкость звука
+            <br>
+            <i class="fas fa-palette"></i> Темы оформления
+            <br>
+            <i class="fas fa-language"></i> Выбор языка
+            <br>
+            <i class="fas fa-user-friends"></i> Настройки игроков
+            <br>
+            <i class="fas fa-clock"></i> Таймеры и лимиты
+        </div>
+        
+        <!-- Версия игры -->
+        <div class="version-info">
+            Версия 1.0.0
+        </div>
+    </div>
+    
+    <div class="back-button-container">
+        <button class="back-button" onclick="window.location.href='index.html'">
+            Назад
+        </button>
+    </div>
+</div>
+
+</body>
+</html>

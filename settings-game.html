@@ -1,0 +1,2486 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Настройки игры - Шпион</title>
+    
+    <!-- Font Awesome для значков -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Шпионские шрифты -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Ubuntu+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/шляпа.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="img/шляпа.png">
+    
+    <style>
+        /* Весь CSS стиль остается без изменений */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Ubuntu Mono', monospace;
+            min-height: 100vh;
+            position: relative;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        /* Фон с размытием */
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('img/fon2.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: -2;
+        }
+
+        /* Слой для размытия */
+        .blur-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: -1;
+        }
+
+        /* Основной контейнер */
+        .settings-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            padding-top: 40px;
+            padding-bottom: 120px;
+        }
+
+        /* Заголовок */
+        .settings-header-title {
+            font-family: 'Russo One', sans-serif;
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+            letter-spacing: 1px;
+        }
+
+        .settings-header-title i {
+            margin-right: 15px;
+        }
+
+        /* Секции настроек */
+        .setting-section {
+            margin-bottom: 25px;
+        }
+
+        /* Блок настройки */
+        .setting-block {
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .setting-block:hover {
+            border-color: rgba(255, 255, 255, 0.25);
+            background: rgba(0, 0, 0, 0.65);
+        }
+
+        /* Заголовок настройки */
+        .setting-title {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .setting-title-text {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .setting-title i {
+            color: #ffcc00;
+            font-size: 1.3rem;
+            width: 30px;
+            text-align: center;
+        }
+
+        /* Кнопка добавления в заголовке */
+        .add-player-header-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px dashed rgba(255, 255, 255, 0.4);
+            border-radius: 10px;
+            color: white;
+            font-family: 'Ubuntu Mono', monospace;
+            font-size: 1rem;
+            padding: 10px 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            min-width: 45px;
+        }
+
+        .add-player-header-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .add-player-header-btn i {
+            font-size: 1.2rem;
+        }
+
+        /* Компактный список */
+        .compact-players {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Компактные карточки в ДВА СТОЛБИКА на всех устройствах */
+        .compact-players-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .compact-player-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.3s ease;
+            min-height: 60px;
+        }
+
+        .compact-player-card:hover {
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .compact-player-emoji {
+            font-size: 1.8rem;
+            min-width: 35px;
+            text-align: center;
+        }
+
+        .compact-player-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            overflow: hidden;
+        }
+
+        .compact-player-name {
+            font-size: 1.1rem;
+            color: white;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-weight: bold;
+        }
+
+        /* Убрал нумерацию игроков */
+        .compact-player-number {
+            display: none; /* Убираем нумерацию */
+        }
+
+        .compact-player-remove {
+            background: none;
+            border: none;
+            color: rgba(255, 100, 100, 0.8);
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .compact-player-remove:hover {
+            background: rgba(255, 100, 100, 0.25);
+            color: rgba(255, 100, 100, 1);
+        }
+
+        /* Стили для карточек локаций - ИЗМЕНИЛ НА ОДНУ КОЛОННУ */
+        .locations-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .location-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 15px;
+            background: rgba(100, 200, 255, 0.12);
+            border-radius: 8px;
+            border: 1px solid rgba(100, 200, 255, 0.3);
+            transition: all 0.3s ease;
+            min-height: 55px; /* Уменьшил высоту */
+        }
+
+        .location-card:hover {
+            background: rgba(100, 200, 255, 0.18);
+            border-color: rgba(100, 200, 255, 0.4);
+        }
+
+        .location-icon {
+            font-size: 1.4rem; /* Уменьшил размер иконки */
+            min-width: 30px; /* Уменьшил ширину */
+            text-align: center;
+            color: #64c8ff;
+        }
+
+        .location-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px; /* Уменьшил расстояние */
+            overflow: hidden;
+        }
+
+        .location-name {
+            font-size: 1rem; /* Уменьшил размер шрифта */
+            color: white;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-weight: bold;
+        }
+
+        .location-count {
+            font-size: 0.8rem; /* Уменьшил размер шрифта */
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .empty-locations {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255, 255, 255, 0.6);
+            font-style: italic;
+            width: 100%;
+        }
+
+        /* МОДАЛЬНОЕ ОКНО - КОМПАКТНОЕ */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 12px;
+            padding: 15px;
+            max-width: 500px;
+            width: 100%;
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(15px);
+            animation: modalAppear 0.3s ease;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        @keyframes modalAppear {
+            from {
+                opacity: 0;
+                transform: translateY(-15px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            position: sticky;
+            top: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2;
+        }
+
+        .modal-title {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.3rem;
+            color: white;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            line-height: 1;
+        }
+
+        .modal-close:hover {
+            color: white;
+            transform: rotate(90deg);
+        }
+
+        /* Форма добавления локаций */
+        .add-locations-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .location-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .location-option:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .location-option.selected {
+            background: rgba(100, 200, 255, 0.2);
+            border-color: #64c8ff;
+        }
+
+        .location-option-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .location-option-icon {
+            font-size: 1.4rem;
+            color: #64c8ff;
+            width: 30px;
+            text-align: center;
+        }
+
+        .location-option-details {
+            flex: 1;
+        }
+
+        .location-option-name {
+            font-size: 1.1rem;
+            color: white;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .location-option-desc {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.7);
+            display: block;
+        }
+
+        .location-checkbox {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .location-checkbox.checked {
+            background: #64c8ff;
+            border-color: #64c8ff;
+        }
+
+        .location-checkbox.checked::after {
+            content: "✓";
+            color: black;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        /* Форма добавления игрока - КОМПАКТНАЯ */
+        .add-player-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* Поле ввода имени без метки - КОМПАКТНОЕ */
+        .name-input {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            border-radius: 8px;
+            color: white;
+            font-family: 'Ubuntu Mono', monospace;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .name-input:focus {
+            outline: none;
+            border-color: #ffcc00;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .name-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Блок выбора смайлика без метки - КОМПАКТНЫЙ */
+        .emoji-selection-section {
+            margin-top: 0;
+        }
+
+        /* Горизонтальный скролл смайликов под полем ввода - КОМПАКТНЫЙ */
+        .emoji-horizontal-scroll-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .emoji-horizontal-scroll {
+            display: flex;
+            overflow-x: auto;
+            overflow-y: hidden;
+            gap: 6px;
+            padding: 8px 5px;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .emoji-horizontal-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .emoji-scroll-option {
+            min-width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            cursor: pointer;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+            user-select: none;
+        }
+
+        .emoji-scroll-option:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: scale(1.05);
+        }
+
+        .emoji-scroll-option.selected {
+            background: #ffcc00;
+            color: black;
+            border-color: #ffcc00;
+            transform: scale(1.1);
+        }
+
+        /* Кнопки навигации для скролла */
+        .emoji-scroll-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 28px;
+            height: 28px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .emoji-horizontal-scroll-container:hover .emoji-scroll-btn {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .emoji-scroll-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .emoji-scroll-btn.prev {
+            left: -8px;
+        }
+
+        .emoji-scroll-btn.next {
+            right: -8px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            position: sticky;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            padding-top: 10px;
+            z-index: 2;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-family: 'Ubuntu Mono', monospace;
+            font-size: 0.95rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .modal-btn-add {
+            background: #ffcc00;
+            color: black;
+        }
+
+        .modal-btn-add:hover {
+            background: #ffd633;
+            transform: translateY(-2px);
+        }
+
+        .modal-btn-save {
+            background: #64c8ff;
+            color: black;
+        }
+
+        .modal-btn-save:hover {
+            background: #80d4ff;
+            transform: translateY(-2px);
+        }
+
+        /* Выбор количества шпионов - 4 варианта */
+        .spies-select {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .spy-option {
+            padding: 15px 5px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            border-radius: 8px;
+            color: white;
+            font-family: 'Ubuntu Mono', monospace;
+            font-size: 1.2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .spy-option:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.35);
+        }
+
+        /* Бежевый цвет для выбранной кнопки */
+        .spy-option.selected {
+            background: #f5deb3;
+            color: #333;
+            border-color: #d2b48c;
+            transform: scale(1.05);
+        }
+
+        .spy-option.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .spy-option.disabled:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: none;
+        }
+
+        /* Таймер раунда */
+        .timer-control-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* Заголовок таймера с переключателем */
+        .timer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .timer-header-title {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .timer-header-title i {
+            color: #ffcc00;
+            font-size: 1.3rem;
+            width: 30px;
+            text-align: center;
+        }
+
+        /* Toggle switch */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.15);
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #ffcc00;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(30px);
+        }
+
+        /* Горизонтальный скролл минут - КОМПАКТНЫЙ */
+        .minutes-scroll-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .minutes-horizontal-scroll {
+            display: flex;
+            overflow-x: auto;
+            overflow-y: hidden;
+            gap: 6px;
+            padding: 8px 5px;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .minutes-horizontal-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .minute-scroll-option {
+            min-width: 55px;
+            height: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+            user-select: none;
+            padding: 5px;
+        }
+
+        .minute-scroll-option:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: scale(1.05);
+        }
+
+        .minute-scroll-option.selected {
+            background: #ffcc00;
+            color: black;
+            border-color: #ffcc00;
+            transform: scale(1.1);
+        }
+
+        .minute-scroll-option.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .minute-scroll-option.disabled:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
+            transform: none;
+        }
+
+        .minute-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .minute-label {
+            font-size: 0.7rem;
+            opacity: 0.9;
+            margin-top: 2px;
+        }
+
+        /* Кнопки навигации для скролла минут */
+        .minutes-scroll-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 25px;
+            height: 25px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .minutes-scroll-container:hover .minutes-scroll-btn {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .minutes-scroll-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .minutes-scroll-btn.prev {
+            left: -6px;
+        }
+
+        .minutes-scroll-btn.next {
+            right: -6px;
+        }
+
+        /* Кнопка назад */
+        .back-button {
+            background-color: rgba(255, 255, 255, 1);
+            color: rgb(0, 0, 0);
+            border: 2px solid rgba(255, 255, 255, 1);
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.8rem; /* Увеличил до размера кнопки Играть */
+            font-weight: 400; /* Добавил жирность как у Играть */
+            padding: 20px 40px; /* Сделал такой же паддинг как у Играть */
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-width: 250px; /* Сделал такую же минимальную ширину */
+            text-transform: uppercase; /* Добавил как у Играть */
+            letter-spacing: 1px; /* Добавил как у Играть */
+            margin-right: 20px;
+            border: none; /* Убрал border как у Играть */
+        }
+
+        .back-button:hover {
+            background-color: rgba(255, 255, 255, 0.9);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 255, 255, 0.3); /* Добавил тень как у Играть */
+        }
+
+        /* Кнопка ИГРАТЬ */
+        .play-button-container {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 2px solid rgba(255, 255, 255, 0.15);
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            gap: 20px; /* Расстояние между кнопками */
+            flex-wrap: wrap; /* Чтобы на мобильных переносилось */
+        }
+
+        .play-button {
+            background-color: #ffffff;
+            color: black;
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 400;
+            padding: 20px 40px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            min-width: 250px;
+        }
+
+        .play-button:hover {
+            background-color: #ffd633;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 204, 0, 0.3);
+        }
+
+        .play-button i {
+            font-size: 1.8rem;
+        }
+
+        /* Анимация появления */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .setting-section {
+            animation: fadeInUp 0.5s ease forwards;
+            opacity: 0;
+        }
+
+        .setting-section:nth-child(1) { animation-delay: 0.1s; }
+        .setting-section:nth-child(2) { animation-delay: 0.2s; }
+        .setting-section:nth-child(3) { animation-delay: 0.3s; }
+        .setting-section:nth-child(4) { animation-delay: 0.4s; }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .settings-container {
+                padding: 15px;
+                padding-top: 30px;
+                padding-bottom: 100px;
+            }
+            
+            .settings-header-title {
+                font-size: 2rem;
+                margin-bottom: 30px;
+            }
+            
+            .setting-block {
+                padding: 15px;
+            }
+            
+            .setting-title {
+                font-size: 1.2rem;
+            }
+            
+            .timer-header-title {
+                font-size: 1.2rem;
+            }
+            
+            /* Кнопки навигации */
+            .play-button-container {
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+                align-items: center;
+            }
+            
+            .back-button {
+                margin-right: 0;
+                width: 100%;
+                font-size: 1.5rem; /* Уменьшил для мобильных */
+                padding: 18px 30px; /* Уменьшил для мобильных */
+                min-width: 200px; /* Уменьшил для мобильных */
+            }
+            
+            .play-button {
+                font-size: 1.5rem;
+                padding: 18px 30px;
+                min-width: 200px;
+                width: 100%;
+            }
+            
+            /* На мобильных тоже две колонки */
+            .compact-players-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+            
+            .compact-player-card {
+                padding: 8px 10px;
+            }
+            
+            .compact-player-emoji {
+                font-size: 1.6rem;
+                min-width: 32px;
+            }
+            
+            .compact-player-name {
+                font-size: 1rem;
+            }
+            
+            /* Шпионы - 4 варианта в строку */
+            .spies-select {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 8px;
+            }
+            
+            .spy-option {
+                padding: 12px 5px;
+                font-size: 1.1rem;
+            }
+            
+            /* Минуты - адаптивный скролл */
+            .minute-scroll-option {
+                min-width: 50px;
+                height: 45px;
+            }
+            
+            .minute-value {
+                font-size: 1.4rem;
+            }
+            
+            .modal-content {
+                padding: 12px;
+                max-width: 350px;
+            }
+            
+            .modal-title {
+                font-size: 1.2rem;
+            }
+            
+            .emoji-scroll-option {
+                min-width: 42px;
+                height: 42px;
+                font-size: 1.5rem;
+            }
+            
+            .emoji-scroll-btn,
+            .minutes-scroll-btn {
+                display: none;
+            }
+            
+            .modal-buttons {
+                flex-direction: column;
+            }
+            
+            .location-option {
+                padding: 10px 12px;
+            }
+            
+            .location-option-icon {
+                font-size: 1.2rem;
+                width: 25px;
+            }
+            
+            .location-option-name {
+                font-size: 1rem;
+            }
+            
+            .location-option-desc {
+                font-size: 0.8rem;
+            }
+            
+            /* Для мобильных оставляем одну колонку для локаций */
+            .locations-grid {
+                gap: 8px;
+            }
+            
+            .location-card {
+                padding: 10px 12px;
+                min-height: 50px;
+            }
+            
+            .location-icon {
+                font-size: 1.3rem;
+                min-width: 28px;
+            }
+            
+            .location-name {
+                font-size: 0.95rem;
+            }
+            
+            .location-count {
+                font-size: 0.75rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .settings-header-title {
+                font-size: 1.7rem;
+            }
+            
+            .setting-title {
+                font-size: 1.1rem;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .setting-title-text {
+                width: 100%;
+            }
+            
+            .add-player-header-btn {
+                align-self: flex-end;
+                margin-top: -40px;
+            }
+            
+            .timer-header-title {
+                font-size: 1.1rem;
+                gap: 10px;
+            }
+            
+            .timer-header-title i {
+                font-size: 1.1rem;
+                width: 25px;
+            }
+            
+            .compact-player-emoji {
+                font-size: 1.5rem;
+                min-width: 30px;
+            }
+            
+            /* Шпионы - 4 варианта в строку */
+            .spies-select {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 6px;
+            }
+            
+            .spy-option {
+                padding: 10px 3px;
+                font-size: 1rem;
+            }
+            
+            /* Минуты - адаптивный скролл */
+            .minute-scroll-option {
+                min-width: 45px;
+                height: 40px;
+            }
+            
+            .minute-value {
+                font-size: 1.3rem;
+            }
+            
+            .minute-label {
+                font-size: 0.65rem;
+            }
+            
+            /* Кнопки навигации */
+            .back-button {
+                font-size: 1.3rem;
+                padding: 15px 25px;
+                min-width: 180px;
+            }
+            
+            .play-button {
+                font-size: 1.3rem;
+                padding: 15px 25px;
+                min-width: 180px;
+            }
+            
+            .emoji-scroll-option {
+                min-width: 38px;
+                height: 38px;
+                font-size: 1.4rem;
+            }
+            
+            .modal-content {
+                padding: 10px;
+                max-width: 300px;
+            }
+            
+            .modal-title {
+                font-size: 1.1rem;
+            }
+            
+            .modal-close {
+                font-size: 1.3rem;
+                width: 22px;
+                height: 22px;
+            }
+            
+            .name-input {
+                padding: 8px 10px;
+                font-size: 0.95rem;
+            }
+            
+            .modal-btn {
+                padding: 8px 10px;
+                font-size: 0.9rem;
+            }
+            
+            /* На очень маленьких экранах тоже две колонки */
+            .compact-players-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 6px;
+            }
+            
+            .compact-player-card {
+                padding: 6px 8px;
+                min-height: 55px;
+            }
+            
+            /* Для очень маленьких экранов оставляем одну колонку для локаций */
+            .locations-grid {
+                gap: 6px;
+            }
+            
+            .location-card {
+                padding: 8px 10px;
+                min-height: 48px;
+            }
+            
+            .location-icon {
+                font-size: 1.2rem;
+                min-width: 26px;
+            }
+            
+            .location-name {
+                font-size: 0.9rem;
+            }
+            
+            .location-count {
+                font-size: 0.7rem;
+            }
+        }
+
+        @media (max-width: 360px) {
+            /* На самых маленьких экранах тоже ДВЕ колонки */
+            .compact-players-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 5px;
+            }
+            
+            .compact-player-card {
+                padding: 5px 6px;
+                min-height: 50px;
+            }
+            
+            .compact-player-emoji {
+                font-size: 1.4rem;
+                min-width: 28px;
+            }
+            
+            .compact-player-name {
+                font-size: 0.9rem;
+            }
+            
+            /* Шпионы - 4 варианта в строку */
+            .spies-select {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 4px;
+            }
+            
+            .spy-option {
+                padding: 8px 2px;
+                font-size: 0.9rem;
+            }
+            
+            /* Минуты - адаптивный скролл */
+            .minute-scroll-option {
+                min-width: 40px;
+                height: 38px;
+            }
+            
+            .minute-value {
+                font-size: 1.2rem;
+            }
+            
+            .minute-label {
+                font-size: 0.6rem;
+            }
+            
+            /* Кнопки навигации */
+            .back-button {
+                font-size: 1.2rem;
+                padding: 12px 20px;
+                min-width: 160px;
+            }
+            
+            .play-button {
+                font-size: 1.2rem;
+                padding: 12px 20px;
+                min-width: 160px;
+            }
+            
+            .modal-content {
+                padding: 8px;
+                max-width: 270px;
+            }
+            
+            .emoji-scroll-option {
+                min-width: 35px;
+                height: 35px;
+                font-size: 1.3rem;
+            }
+            
+            .emoji-horizontal-scroll,
+            .minutes-horizontal-scroll {
+                gap: 4px;
+                padding: 5px 4px;
+            }
+            
+            /* Для самых маленьких экранов оставляем одну колонку для локаций */
+            .locations-grid {
+                gap: 5px;
+            }
+            
+            .location-card {
+                padding: 7px 8px;
+                min-height: 45px;
+            }
+            
+            .location-icon {
+                font-size: 1.1rem;
+                min-width: 24px;
+            }
+            
+            .location-name {
+                font-size: 0.85rem;
+            }
+            
+            .location-count {
+                font-size: 0.65rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+<div class="background"></div>
+<div class="blur-overlay"></div>
+
+<div class="settings-container">
+    <h1 class="settings-header-title">
+        <i class="fas fa-cogs"></i> Настройки игры
+    </h1>
+    
+    <div class="settings-content">
+        <!-- 1. Игроки (компактная версия в два столбика) -->
+        <div class="setting-section">
+            <div class="setting-block">
+                <h2 class="setting-title">
+                    <div class="setting-title-text">
+                        <i class="fas fa-users"></i> Игроков <span id="playersCount">0</span>
+                    </div>
+                    <button class="add-player-header-btn" id="addPlayerBtn">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </h2>
+                <div class="compact-players">
+                    <div class="compact-players-grid" id="compactPlayersGrid">
+                        <!-- Список игроков в два столбика -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 2. Выбор количества шпионов - 4 варианта -->
+        <div class="setting-section">
+            <div class="setting-block">
+                <h2 class="setting-title">
+                    <div class="setting-title-text">
+                        <i class="fas fa-user-secret"></i> Количество шпионов
+                    </div>
+                </h2>
+                <div class="spies-select">
+                    <div class="spy-option selected" data-spies="1">1</div>
+                    <div class="spy-option" data-spies="2">2</div>
+                    <div class="spy-option" data-spies="3">3</div>
+                    <div class="spy-option" data-spies="4">4</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 3. Таймер раунда -->
+        <div class="setting-section">
+            <div class="setting-block">
+                <div class="timer-header">
+                    <h2 class="timer-header-title">
+                        <i class="fas fa-hourglass-half"></i> Таймер раунда
+                    </h2>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="timerToggle" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="timer-control-wrapper">
+                    <!-- Горизонтальный скролл выбора минут -->
+                    <div class="minutes-scroll-container">
+                        <!-- Кнопки навигации -->
+                        <button type="button" class="minutes-scroll-btn prev" id="minutesScrollPrev">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        
+                        <!-- Контейнер для горизонтального скролла минут -->
+                        <div class="minutes-horizontal-scroll" id="minutesHorizontalScroll">
+                            <!-- Минуты будут добавлены динамически -->
+                        </div>
+                        
+                        <button type="button" class="minutes-scroll-btn next" id="minutesScrollNext">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 4. Выбор набора локаций -->
+        <div class="setting-section">
+            <div class="setting-block">
+                <h2 class="setting-title">
+                    <div class="setting-title-text">
+                        <i class="fas fa-map-marker-alt"></i> Наборы локаций <span id="locationsCount">0</span>
+                    </div>
+                    <button class="add-player-header-btn" id="addLocationsBtn">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </h2>
+                <div class="compact-players">
+                    <!-- Изменил на locations-grid (одна колонка) -->
+                    <div class="locations-grid" id="locationsGrid">
+                        <!-- Здесь будут отображаться выбранные наборы локаций -->
+                        <div class="empty-locations">
+                            Локации не выбраны
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Кнопки навигации -->
+        <div class="play-button-container">
+            <button class="back-button" onclick="window.location.href='index.html'">
+                Назад
+            </button>
+
+            <button class="play-button" id="playButton">
+                Играть
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- МОДАЛЬНОЕ ОКНО ДОБАВЛЕНИЯ ИГРОКА -->
+<div class="modal-overlay" id="addPlayerModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Новый игрок</h2>
+            <button class="modal-close" id="closeModalBtn">&times;</button>
+        </div>
+        
+        <form class="add-player-form" id="addPlayerForm">
+            <!-- Поле ввода имени БЕЗ МЕТКИ -->
+            <div class="form-group">
+                <input type="text" class="name-input" id="playerNameInput" 
+                       placeholder="Введите имя игрока" maxlength="20" required>
+            </div>
+            
+            <!-- Выбор смайлика БЕЗ МЕТКИ -->
+            <div class="form-group emoji-selection-section">
+                <!-- Горизонтальный скролл смайликов -->
+                <div class="emoji-horizontal-scroll-container">
+                    <!-- Кнопки навигации -->
+                    <button type="button" class="emoji-scroll-btn prev" id="emojiScrollPrev">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    
+                    <!-- Контейнер для горизонтального скролла -->
+                    <div class="emoji-horizontal-scroll" id="emojiHorizontalScroll">
+                        <!-- Смайлики будут добавлены динамически -->
+                    </div>
+                    
+                    <button type="button" class="emoji-scroll-btn next" id="emojiScrollNext">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="modal-buttons">
+                <button type="submit" class="modal-btn modal-btn-add">
+                    Добавить игрока
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- МОДАЛЬНОЕ ОКНО ВЫБОРА ЛОКАЦИЙ -->
+<div class="modal-overlay" id="addLocationsModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Выбор наборов локаций</h2>
+            <button class="modal-close" id="closeLocationsModalBtn">&times;</button>
+        </div>
+        
+        <form class="add-locations-form" id="addLocationsForm">
+            <!-- Сюда будут динамически добавляться наборы локаций из locations.html -->
+            <div id="locationsOptionsContainer">
+                <div style="text-align: center; padding: 20px; color: rgba(255,255,255,0.7);">
+                    Загрузка наборов локаций...
+                </div>
+            </div>
+            
+            <div class="modal-buttons">
+                <button type="submit" class="modal-btn modal-btn-save">
+                    Сохранить выбор
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Анимация появления секций
+        const settingSections = document.querySelectorAll('.setting-section');
+        settingSections.forEach((section, index) => {
+            section.style.animationDelay = (index * 0.1 + 0.1) + 's';
+            section.style.opacity = '1';
+        });
+        
+        // Список смайликов для выбора
+        const emojiList = [
+            '😀', '😎', '🤠', '🧐', '🤓', '😜', '😇', '🤩', '🥳', '😊',
+            '😋', '🤪', '😺', '👻', '🤖', '🎃', '🧙', '🧚', '🦸', '🦹',
+            '🧝', '🧞', '🧟', '🐵', '🐶', '🐱', '🦊', '🐻', '🐼', '🐨',
+            '🐯', '🦁', '🐮', '🐷', '🐸', '🐔', '🐧', '🐦', '🦉', '🦄',
+            '👽', '🤡', '💩', '🤯', '🥶', '🥵', '🤢', '🤕', '🤑', '🤠',
+            '😷', '🤧', '🤮', '💀', '☠️', '👾', '🤖', '🎃', '👻', '💫'
+        ];
+        
+        // Данные игроков - НЕТ игроков по умолчанию
+        let players = [];
+        
+        // Данные о наборах локаций (будут загружены из locations.html)
+        let locationsData = [];
+        
+        // Выбранные наборы локаций
+        let selectedLocations = [];
+        
+        // Элементы DOM
+        const compactPlayersGrid = document.getElementById('compactPlayersGrid');
+        const playersCountSpan = document.getElementById('playersCount');
+        const locationsGrid = document.getElementById('locationsGrid');
+        const locationsCountSpan = document.getElementById('locationsCount');
+        const addPlayerBtn = document.getElementById('addPlayerBtn');
+        const addLocationsBtn = document.getElementById('addLocationsBtn');
+        const addPlayerModal = document.getElementById('addPlayerModal');
+        const addLocationsModal = document.getElementById('addLocationsModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const closeLocationsModalBtn = document.getElementById('closeLocationsModalBtn');
+        const addPlayerForm = document.getElementById('addPlayerForm');
+        const addLocationsForm = document.getElementById('addLocationsForm');
+        const playerNameInput = document.getElementById('playerNameInput');
+        const locationsOptionsContainer = document.getElementById('locationsOptionsContainer');
+        
+        // Выбор количества шпионов
+        const spyOptions = document.querySelectorAll('.spy-option');
+        
+        // Управление таймером
+        const timerToggle = document.getElementById('timerToggle');
+        
+        // Кнопка Играть
+        const playButton = document.getElementById('playButton');
+        
+        // Переменная для хранения выбранного смайлика
+        let selectedEmoji = '😀';
+        
+        // Переменная для хранения выбранного количества минут
+        let selectedMinutes = 5;
+        
+        // Функция для загрузки данных о локациях из locations.html
+        async function loadLocationsData() {
+            try {
+                // Загружаем файл locations.html
+                const response = await fetch('locations.html');
+                const html = await response.text();
+                
+                // Создаем временный DOM элемент для парсинга
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // Находим все секции с локациями
+                const locationSections = doc.querySelectorAll('.locations-section');
+                
+                // Очищаем массив данных
+                locationsData = [];
+                
+                // Обрабатываем каждую секцию
+                locationSections.forEach((section, index) => {
+                    const block = section.querySelector('.locations-block');
+                    if (!block) return;
+                    
+                    // Извлекаем информацию о наборе
+                    const titleElement = block.querySelector('.locations-title');
+                    const hintElement = block.querySelector('.hint');
+                    const locationsList = block.querySelector('.locations-list');
+                    
+                    if (!titleElement || !locationsList) return;
+                    
+                    // Получаем текст заголовка
+                    const titleText = titleElement.textContent.trim();
+                    
+                    // Извлекаем иконку из заголовка
+                    const iconElement = titleElement.querySelector('i');
+                    const iconClass = iconElement ? iconElement.className : 'fas fa-map-marker-alt';
+                    
+                    // Получаем все локации из списка
+                    const locationItems = locationsList.querySelectorAll('.location-item');
+                    const locations = Array.from(locationItems).map(item => item.textContent.trim());
+                    
+                    // Создаем уникальный ID для набора (используем ID блока или создаем на основе текста)
+                    const blockId = block.id || `location-${index}`;
+                    
+                    // Добавляем данные в массив
+                    locationsData.push({
+                        id: blockId,
+                        name: titleText.replace(/\(нажми для раскрытия\)/g, '').trim(),
+                        icon: iconClass,
+                        hint: hintElement ? hintElement.textContent.trim() : '',
+                        locations: locations,
+                        count: locations.length
+                    });
+                });
+                
+                console.log('Загружены наборы локаций:', locationsData);
+                return locationsData;
+            } catch (error) {
+                console.error('Ошибка загрузки данных о локациях:', error);
+                
+                // Возвращаем данные по умолчанию в случае ошибки
+                return [
+                    {
+                        id: 'classic',
+                        name: 'Классический набор',
+                        icon: 'fas fa-theater-masks',
+                        hint: '(нажми для раскрытия)',
+                        locations: ['Школа', 'Церковь', 'Ресторан', 'Цирк'],
+                        count: 40
+                    },
+                    {
+                        id: 'potter',
+                        name: 'Гарри Поттер',
+                        icon: 'fas fa-bolt',
+                        hint: '(нажми для раскрытия)',
+                        locations: ['Хогвартс', 'Гринготтс', 'Паб "Три метлы"', 'Азкабан'],
+                        count: 10
+                    },
+                    {
+                        id: 'cartoons',
+                        name: 'Мультики',
+                        icon: 'fas fa-film',
+                        hint: '(нажми для раскрытия)',
+                        locations: ['Том и Джерри', 'Шрек', 'Зверополис', 'Король Лев'],
+                        count: 10
+                    }
+                ];
+            }
+        }
+        
+        // Функция для отображения опций локаций в модальном окне
+        function renderLocationOptions() {
+            locationsOptionsContainer.innerHTML = '';
+            
+            if (locationsData.length === 0) {
+                locationsOptionsContainer.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: rgba(255,255,255,0.7);">
+                        Не удалось загрузить наборы локаций
+                    </div>
+                `;
+                return;
+            }
+            
+            // Создаем опции для каждого набора локаций
+            locationsData.forEach(locationSet => {
+                const locationOption = document.createElement('div');
+                locationOption.className = 'location-option';
+                locationOption.dataset.locationId = locationSet.id;
+                
+                locationOption.innerHTML = `
+                    <div class="location-option-info">
+                        <div class="location-option-icon">
+                            <i class="${locationSet.icon}"></i>
+                        </div>
+                        <div class="location-option-details">
+                            <div class="location-option-name">${locationSet.name}</div>
+                            <span class="location-option-desc">${locationSet.count} локаций</span>
+                        </div>
+                    </div>
+                    <div class="location-checkbox"></div>
+                `;
+                
+                locationsOptionsContainer.appendChild(locationOption);
+            });
+            
+            // Обновляем состояние чекбоксов
+            updateLocationsModal();
+        }
+        
+        // Функция обновления списка игроков (без нумерации)
+        function updatePlayersList() {
+            compactPlayersGrid.innerHTML = '';
+            
+            if (players.length === 0) {
+                const emptyMessage = document.createElement('div');
+                emptyMessage.className = 'empty-locations';
+                emptyMessage.textContent = 'Игроки не добавлены';
+                compactPlayersGrid.appendChild(emptyMessage);
+                return;
+            }
+            
+            players.forEach((player, index) => {
+                const playerCard = document.createElement('div');
+                playerCard.className = 'compact-player-card';
+                
+                // Убрал нумерацию игроков
+                playerCard.innerHTML = `
+                    <div class="compact-player-emoji">${player.emoji}</div>
+                    <div class="compact-player-info">
+                        <div class="compact-player-name" title="${player.name}">${player.name}</div>
+                        <!-- Убрал блок с номером игрока -->
+                    </div>
+                    <button class="compact-player-remove" data-index="${index}" title="Удалить">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                
+                compactPlayersGrid.appendChild(playerCard);
+            });
+            
+            // Обновляем счетчик
+            playersCountSpan.textContent = players.length;
+            
+            // Автоматическая настройка доступности вариантов шпионов
+            updateSpiesOptions();
+        }
+        
+        // Функция обновления списка локаций (в одну колонну)
+        function updateLocationsList() {
+            locationsGrid.innerHTML = '';
+            
+            if (selectedLocations.length === 0) {
+                const emptyMessage = document.createElement('div');
+                emptyMessage.className = 'empty-locations';
+                emptyMessage.textContent = 'Локации не выбраны';
+                locationsGrid.appendChild(emptyMessage);
+                locationsCountSpan.textContent = '0';
+                return;
+            }
+            
+            selectedLocations.forEach(locationId => {
+                const locationSet = locationsData.find(loc => loc.id === locationId);
+                if (!locationSet) return;
+                
+                const locationCard = document.createElement('div');
+                locationCard.className = 'location-card';
+                
+                locationCard.innerHTML = `
+                    <div class="location-icon">
+                        <i class="${locationSet.icon}"></i>
+                    </div>
+                    <div class="location-info">
+                        <div class="location-name" title="${locationSet.name}">${locationSet.name}</div>
+                        <div class="location-count">${locationSet.count} локаций</div>
+                    </div>
+                    <button class="compact-player-remove" data-location-id="${locationId}" title="Удалить">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                
+                locationsGrid.appendChild(locationCard);
+            });
+            
+            // Обновляем счетчик
+            locationsCountSpan.textContent = selectedLocations.length;
+        }
+        
+        // Функция обновления доступных вариантов шпионов
+        function updateSpiesOptions() {
+            const playerCount = players.length;
+            
+            spyOptions.forEach(spyOpt => {
+                const spyCount = parseInt(spyOpt.dataset.spies);
+                let isAllowed = false;
+                
+                // Проверяем по новым правилам:
+                // 1 шпион от 3 до 4 человек
+                // 1-2 шпиона от 4 до 6 человек  
+                // 1-3 шпиона от 6 до 10 человек
+                // 1-4 шпиона от 10 и более человек
+                
+                if (spyCount === 1) {
+                    // 1 шпион доступен от 3 игроков
+                    isAllowed = (playerCount >= 3);
+                } else if (spyCount === 2) {
+                    // 2 шпиона доступны от 4 игроков
+                    isAllowed = (playerCount >= 4);
+                } else if (spyCount === 3) {
+                    // 3 шпиона доступны от 6 игроков
+                    isAllowed = (playerCount >= 6);
+                } else if (spyCount === 4) {
+                    // 4 шпиона доступны от 10 игроков
+                    isAllowed = (playerCount >= 10);
+                }
+                
+                if (isAllowed) {
+                    // Можно выбрать - активируем
+                    spyOpt.classList.remove('disabled');
+                    spyOpt.style.cursor = 'pointer';
+                    spyOpt.style.opacity = '1';
+                } else {
+                    // Нельзя выбрать - деактивируем
+                    spyOpt.classList.add('disabled');
+                    spyOpt.style.cursor = 'not-allowed';
+                    spyOpt.style.opacity = '0.4';
+                    
+                    // Если выбранный шпион теперь недопустим, выбираем первый допустимый
+                    if (spyOpt.classList.contains('selected')) {
+                        spyOpt.classList.remove('selected');
+                        
+                        // Находим первый допустимый вариант
+                        for (let option of spyOptions) {
+                            const optSpyCount = parseInt(option.dataset.spies);
+                            let optAllowed = false;
+                            
+                            if (optSpyCount === 1) {
+                                optAllowed = (playerCount >= 3);
+                            } else if (optSpyCount === 2) {
+                                optAllowed = (playerCount >= 4);
+                            } else if (optSpyCount === 3) {
+                                optAllowed = (playerCount >= 6);
+                            } else if (optSpyCount === 4) {
+                                optAllowed = (playerCount >= 10);
+                            }
+                            
+                            if (optAllowed) {
+                                option.classList.add('selected');
+                                break;
+                            }
+                        }
+                        
+                        // Если нет допустимых вариантов (меньше 3 игроков), снимаем выделение со всех
+                        if (playerCount < 3) {
+                            spyOptions.forEach(opt => opt.classList.remove('selected'));
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Функция инициализации ГОРИЗОНТАЛЬНОГО скролла смайликов
+        function initEmojiScroll() {
+            const emojiScroll = document.getElementById('emojiHorizontalScroll');
+            const prevBtn = document.getElementById('emojiScrollPrev');
+            const nextBtn = document.getElementById('emojiScrollNext');
+            
+            emojiScroll.innerHTML = '';
+            
+            // Список смайликов (уникальные)
+            const uniqueEmojiList = [...new Set(emojiList)];
+            
+            // Добавляем смайлики в горизонтальный скролл
+            uniqueEmojiList.forEach(emoji => {
+                const emojiOption = document.createElement('div');
+                emojiOption.className = 'emoji-scroll-option';
+                emojiOption.textContent = emoji;
+                emojiOption.dataset.emoji = emoji;
+                
+                emojiOption.addEventListener('click', function() {
+                    // Убираем выделение у всех
+                    document.querySelectorAll('.emoji-scroll-option').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    
+                    // Выделяем выбранный
+                    this.classList.add('selected');
+                    
+                    // Сохраняем выбранный смайлик
+                    selectedEmoji = emoji;
+                });
+                
+                emojiScroll.appendChild(emojiOption);
+            });
+            
+            // Выбираем первый смайлик по умолчанию
+            if (emojiScroll.firstChild) {
+                emojiScroll.firstChild.classList.add('selected');
+                selectedEmoji = emojiScroll.firstChild.textContent;
+            }
+            
+            // Функции для кнопок навигации
+            function scrollEmoji(direction) {
+                const scrollAmount = 100; // px для прокрутки
+                emojiScroll.scrollBy({
+                    left: direction * scrollAmount,
+                    behavior: 'smooth'
+                });
+            }
+            
+            // Обработчики для кнопок навигации
+            if (prevBtn && nextBtn) {
+                prevBtn.addEventListener('click', () => scrollEmoji(-1));
+                nextBtn.addEventListener('click', () => scrollEmoji(1));
+            }
+            
+            // Скрываем/показываем кнопки навигации в зависимости от позиции скролла
+            function updateNavButtons() {
+                if (!prevBtn || !nextBtn) return;
+                
+                const scrollLeft = emojiScroll.scrollLeft;
+                const scrollWidth = emojiScroll.scrollWidth;
+                const clientWidth = emojiScroll.clientWidth;
+                
+                // Показываем/скрываем кнопки в зависимости от позиции скролла
+                prevBtn.style.opacity = scrollLeft > 10 ? '1' : '0';
+                nextBtn.style.opacity = (scrollLeft + clientWidth) < (scrollWidth - 10) ? '1' : '0';
+                
+                // Включаем/отключаем pointer-events
+                prevBtn.style.pointerEvents = scrollLeft > 10 ? 'auto' : 'none';
+                nextBtn.style.pointerEvents = (scrollLeft + clientWidth) < (scrollWidth - 10) ? 'auto' : 'none';
+            }
+            
+            // Обновляем кнопки при скролле и изменении размера
+            emojiScroll.addEventListener('scroll', updateNavButtons);
+            window.addEventListener('resize', updateNavButtons);
+            
+            // Инициализируем кнопки
+            updateNavButtons();
+            
+            // Добавляем обработчик свайпа на мобильных устройствах
+            let touchStartX = 0;
+            let touchEndX = 0;
+            
+            emojiScroll.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+            
+            emojiScroll.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            }, { passive: true });
+            
+            function handleSwipe() {
+                const swipeThreshold = 50; // минимальное расстояние для свайпа
+                const diff = touchStartX - touchEndX;
+                
+                if (Math.abs(diff) > swipeThreshold) {
+                    if (diff > 0) {
+                        // Свайп влево - прокрутка вправо
+                        scrollEmoji(1);
+                    } else {
+                        // Свайп вправо - прокрутка влево
+                        scrollEmoji(-1);
+                    }
+                }
+            }
+        }
+        
+        // Функция инициализации ГОРИЗОНТАЛЬНОГО скролла минут
+        function initMinutesScroll() {
+            const minutesScroll = document.getElementById('minutesHorizontalScroll');
+            const prevBtn = document.getElementById('minutesScrollPrev');
+            const nextBtn = document.getElementById('minutesScrollNext');
+            
+            minutesScroll.innerHTML = '';
+            
+            // Создаем варианты от 1 до 30 минут
+            for (let i = 1; i <= 30; i++) {
+                const minuteOption = document.createElement('div');
+                minuteOption.className = 'minute-scroll-option';
+                minuteOption.dataset.minutes = i;
+                
+                minuteOption.innerHTML = `
+                    <div class="minute-value">${i}</div>
+                    <div class="minute-label">мин.</div>
+                `;
+                
+                minuteOption.addEventListener('click', function() {
+                    // Если таймер выключен, игнорируем клик
+                    if (!timerToggle.checked) {
+                        return;
+                    }
+                    
+                    // Убираем выделение у всех
+                    document.querySelectorAll('.minute-scroll-option').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    
+                    // Выделяем выбранный
+                    this.classList.add('selected');
+                    
+                    // Сохраняем выбранное количество минут
+                    selectedMinutes = i;
+                });
+                
+                minutesScroll.appendChild(minuteOption);
+            }
+            
+            // Выбираем 5 минут по умолчанию (если таймер включен)
+            if (timerToggle.checked) {
+                const defaultOption = minutesScroll.querySelector(`[data-minutes="5"]`);
+                if (defaultOption) {
+                    defaultOption.classList.add('selected');
+                    selectedMinutes = 5;
+                }
+            }
+            
+            // Деактивируем кнопки, если таймер выключен
+            updateMinutesOptionsState();
+            
+            // Функции для кнопок навигации
+            function scrollMinutes(direction) {
+                const scrollAmount = 100; // px для прокрутки
+                minutesScroll.scrollBy({
+                    left: direction * scrollAmount,
+                    behavior: 'smooth'
+                });
+            }
+            
+            // Обработчики для кнопок навигации
+            if (prevBtn && nextBtn) {
+                prevBtn.addEventListener('click', () => scrollMinutes(-1));
+                nextBtn.addEventListener('click', () => scrollMinutes(1));
+            }
+            
+            // Скрываем/показываем кнопки навигации в зависимости от позиции скролла
+            function updateNavButtons() {
+                if (!prevBtn || !nextBtn) return;
+                
+                const scrollLeft = minutesScroll.scrollLeft;
+                const scrollWidth = minutesScroll.scrollWidth;
+                const clientWidth = minutesScroll.clientWidth;
+                
+                // Показываем/скрываем кнопки в зависимости от позиции скролла
+                prevBtn.style.opacity = scrollLeft > 10 ? '1' : '0';
+                nextBtn.style.opacity = (scrollLeft + clientWidth) < (scrollWidth - 10) ? '1' : '0';
+                
+                // Включаем/отключаем pointer-events
+                prevBtn.style.pointerEvents = scrollLeft > 10 ? 'auto' : 'none';
+                nextBtn.style.pointerEvents = (scrollLeft + clientWidth) < (scrollWidth - 10) ? 'auto' : 'none';
+            }
+            
+            // Обновляем кнопки при скролле и изменении размера
+            minutesScroll.addEventListener('scroll', updateNavButtons);
+            window.addEventListener('resize', updateNavButtons);
+            
+            // Инициализируем кнопки
+            updateNavButtons();
+            
+            // Добавляем обработчик свайпа на мобильных устройствах
+            let touchStartX = 0;
+            let touchEndX = 0;
+            
+            minutesScroll.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+            
+            minutesScroll.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            }, { passive: true });
+            
+            function handleSwipe() {
+                const swipeThreshold = 50; // минимальное расстояние для свайпа
+                const diff = touchStartX - touchEndX;
+                
+                if (Math.abs(diff) > swipeThreshold) {
+                    if (diff > 0) {
+                        // Свайп влево - прокрутка вправо
+                        scrollMinutes(1);
+                    } else {
+                        // Свайп вправо - прокрутка влево
+                        scrollMinutes(-1);
+                    }
+                }
+            }
+        }
+        
+        // Функция обновления состояния кнопок минут
+        function updateMinutesOptionsState() {
+            const minutesScroll = document.getElementById('minutesHorizontalScroll');
+            const minuteOptions = minutesScroll.querySelectorAll('.minute-scroll-option');
+            
+            if (timerToggle.checked) {
+                // Таймер включен - активируем выбор минут
+                minuteOptions.forEach(opt => {
+                    opt.classList.remove('disabled');
+                    opt.style.cursor = 'pointer';
+                    opt.style.opacity = '1';
+                });
+                
+                // Выбираем текущее значение или 5 минут по умолчанию
+                const currentOption = minutesScroll.querySelector(`[data-minutes="${selectedMinutes}"]`);
+                if (currentOption) {
+                    currentOption.classList.add('selected');
+                } else {
+                    const defaultOption = minutesScroll.querySelector('[data-minutes="5"]');
+                    if (defaultOption) {
+                        defaultOption.classList.add('selected');
+                        selectedMinutes = 5;
+                    }
+                }
+            } else {
+                // Таймер выключен - деактивируем выбор минут
+                minuteOptions.forEach(opt => {
+                    opt.classList.add('disabled');
+                    opt.style.cursor = 'not-allowed';
+                    opt.style.opacity = '0.4';
+                    opt.classList.remove('selected');
+                });
+            }
+        }
+        
+        // Функция обновления состояния чекбоксов в модальном окне локаций
+        function updateLocationsModal() {
+            const locationOptions = document.querySelectorAll('.location-option');
+            
+            locationOptions.forEach(option => {
+                const locationId = option.dataset.locationId;
+                const checkbox = option.querySelector('.location-checkbox');
+                
+                // Проверяем, выбран ли этот набор
+                if (selectedLocations.includes(locationId)) {
+                    option.classList.add('selected');
+                    if (checkbox) checkbox.classList.add('checked');
+                } else {
+                    option.classList.remove('selected');
+                    if (checkbox) checkbox.classList.remove('checked');
+                }
+            });
+        }
+        
+        // Управление таймером - включение/выключение
+        timerToggle.addEventListener('change', function() {
+            updateMinutesOptionsState();
+        });
+        
+        // Открытие модального окна добавления игрока
+        addPlayerBtn.addEventListener('click', function() {
+            // Сбрасываем форму
+            playerNameInput.value = '';
+            selectedEmoji = '😀';
+            
+            // Инициализируем ГОРИЗОНТАЛЬНЫЙ скролл смайликов
+            initEmojiScroll();
+            
+            // Показываем модальное окно
+            addPlayerModal.classList.add('active');
+            
+            // Добавляем возможность закрытия по Escape
+            document.addEventListener('keydown', handleEscape);
+        });
+        
+        // Открытие модального окна добавления локаций
+        addLocationsBtn.addEventListener('click', async function() {
+            // Показываем загрузку
+            locationsOptionsContainer.innerHTML = `
+                <div style="text-align: center; padding: 20px; color: rgba(255,255,255,0.7);">
+                    Загрузка наборов локаций...
+                </div>
+            `;
+            
+            // Показываем модальное окно
+            addLocationsModal.classList.add('active');
+            
+            // Загружаем данные о локациях, если еще не загружены
+            if (locationsData.length === 0) {
+                locationsData = await loadLocationsData();
+            }
+            
+            // Рендерим опции
+            renderLocationOptions();
+            
+            // Обновляем состояние чекбоксов
+            updateLocationsModal();
+            
+            // Добавляем возможность закрытия по Escape
+            document.addEventListener('keydown', handleEscapeLocations);
+        });
+        
+        // Закрытие модальных окон
+        function closePlayerModal() {
+            addPlayerModal.classList.remove('active');
+            addPlayerForm.reset();
+            document.removeEventListener('keydown', handleEscape);
+        }
+        
+        function closeLocationsModal() {
+            addLocationsModal.classList.remove('active');
+            document.removeEventListener('keydown', handleEscapeLocations);
+        }
+        
+        // Обработчики клавиши Escape
+        function handleEscape(e) {
+            if (e.key === 'Escape' && addPlayerModal.classList.contains('active')) {
+                closePlayerModal();
+            }
+        }
+        
+        function handleEscapeLocations(e) {
+            if (e.key === 'Escape' && addLocationsModal.classList.contains('active')) {
+                closeLocationsModal();
+            }
+        }
+        
+        // Закрытие по крестику
+        closeModalBtn.addEventListener('click', closePlayerModal);
+        closeLocationsModalBtn.addEventListener('click', closeLocationsModal);
+        
+        // Закрытие по клику вне модального окна
+        addPlayerModal.addEventListener('click', function(e) {
+            if (e.target === addPlayerModal) {
+                closePlayerModal();
+            }
+        });
+        
+        addLocationsModal.addEventListener('click', function(e) {
+            if (e.target === addLocationsModal) {
+                closeLocationsModal();
+            }
+        });
+        
+        // Обработка кликов по опциям локаций (делегирование событий)
+        locationsOptionsContainer.addEventListener('click', function(e) {
+            // Клик по опции локации
+            const locationOption = e.target.closest('.location-option');
+            if (locationOption) {
+                const locationId = locationOption.dataset.locationId;
+                const checkbox = locationOption.querySelector('.location-checkbox');
+                
+                // Переключаем состояние
+                if (selectedLocations.includes(locationId)) {
+                    // Удаляем из выбранных
+                    selectedLocations = selectedLocations.filter(id => id !== locationId);
+                    locationOption.classList.remove('selected');
+                    if (checkbox) checkbox.classList.remove('checked');
+                } else {
+                    // Добавляем в выбранные
+                    selectedLocations.push(locationId);
+                    locationOption.classList.add('selected');
+                    if (checkbox) checkbox.classList.add('checked');
+                }
+            }
+            
+            // Клик по чекбоксу локации
+            const checkbox = e.target.closest('.location-checkbox');
+            if (checkbox) {
+                const locationOption = checkbox.closest('.location-option');
+                if (locationOption) {
+                    const locationId = locationOption.dataset.locationId;
+                    
+                    // Переключаем состояние
+                    if (selectedLocations.includes(locationId)) {
+                        // Удаляем из выбранных
+                        selectedLocations = selectedLocations.filter(id => id !== locationId);
+                        locationOption.classList.remove('selected');
+                        checkbox.classList.remove('checked');
+                    } else {
+                        // Добавляем в выбранные
+                        selectedLocations.push(locationId);
+                        locationOption.classList.add('selected');
+                        checkbox.classList.add('checked');
+                    }
+                }
+            }
+        });
+        
+        // Добавление игрока
+        addPlayerForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = playerNameInput.value.trim();
+            
+            if (name) {
+                // Убрана проверка на уникальность имен
+                // Может быть много одинаковых имен
+                
+                players.push({
+                    name: name || `Игрок ${players.length + 1}`,
+                    emoji: selectedEmoji
+                });
+                
+                updatePlayersList();
+                closePlayerModal();
+            }
+        });
+        
+        // Сохранение выбора локаций
+        addLocationsForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Сохраняем выбранные локации
+            updateLocationsList();
+            closeLocationsModal();
+        });
+        
+        // Удаление игрока или локации
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.compact-player-remove')) {
+                const button = e.target.closest('.compact-player-remove');
+                
+                // Проверяем, что это кнопка удаления игрока (есть data-index)
+                if (button.dataset.index !== undefined) {
+                    const index = parseInt(button.dataset.index);
+                    players.splice(index, 1);
+                    updatePlayersList();
+                }
+                
+                // Проверяем, что это кнопка удаления локации (есть data-location-id)
+                if (button.dataset.locationId !== undefined) {
+                    const locationId = button.dataset.locationId;
+                    selectedLocations = selectedLocations.filter(id => id !== locationId);
+                    updateLocationsList();
+                }
+            }
+        });
+        
+        // Выбор количества шпионов
+        spyOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                // Если вариант отключен, игнорируем клик
+                if (this.classList.contains('disabled')) {
+                    return;
+                }
+                
+                spyOptions.forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+            });
+        });
+        
+        // Кнопка Играть
+        playButton.addEventListener('click', function() {
+            if (players.length < 3) {
+                alert('Для игры нужно минимум 3 игрока!');
+                return;
+            }
+            
+            // Проверяем, что выбран допустимый вариант шпионов
+            const selectedSpyOption = document.querySelector('.spy-option.selected');
+            if (!selectedSpyOption) {
+                alert('Пожалуйста, выберите количество шпионов!');
+                return;
+            }
+            
+            // Проверяем, что выбран хотя бы один набор локаций
+            if (selectedLocations.length === 0) {
+                alert('Пожалуйста, выберите хотя бы один набор локаций!');
+                return;
+            }
+            
+            // Собираем настройки
+            const settings = {
+                players: players,
+                spies: selectedSpyOption.dataset.spies,
+                timerEnabled: document.getElementById('timerToggle').checked,
+                timerMinutes: selectedMinutes,
+                selectedLocations: selectedLocations,
+                // Сохраняем также полные данные о выбранных локациях для игры
+                locationsData: locationsData.filter(loc => selectedLocations.includes(loc.id))
+            };
+            
+            // Сохраняем в localStorage
+            localStorage.setItem('spyGameSettings', JSON.stringify(settings));
+            
+            // Переходим на страницу игры
+            window.location.href = 'game.html';
+        });
+        
+        // Инициализация скролла минут
+        initMinutesScroll();
+        
+        // Инициализация - нет игроков по умолчанию
+        updatePlayersList();
+        updateLocationsList();
+        
+        // Загрузка сохраненных настроек
+        const savedSettings = localStorage.getItem('spyGameSettings');
+        if (savedSettings) {
+            try {
+                const settings = JSON.parse(savedSettings);
+                
+                // Игроки
+                if (settings.players && settings.players.length >= 3) {
+                    players = settings.players;
+                    updatePlayersList();
+                }
+                
+                // Шпионы
+                const selectedSpies = settings.spies || '1';
+                spyOptions.forEach(opt => {
+                    opt.classList.remove('selected');
+                    if (opt.dataset.spies === selectedSpies) {
+                        opt.classList.add('selected');
+                    }
+                });
+                
+                // Таймер
+                document.getElementById('timerToggle').checked = settings.timerEnabled !== false;
+                selectedMinutes = settings.timerMinutes || 5;
+                
+                // Инициализируем скролл минут после загрузки настроек
+                setTimeout(() => {
+                    initMinutesScroll();
+                }, 100);
+                
+                // Локации
+                if (settings.selectedLocations && Array.isArray(settings.selectedLocations)) {
+                    selectedLocations = settings.selectedLocations;
+                } else {
+                    // Старая система (через чекбоксы)
+                    selectedLocations = [];
+                    if (settings.classicLocations !== false) selectedLocations.push('classic-block');
+                    if (settings.potterLocations) selectedLocations.push('potter-block');
+                    if (settings.cartoonLocations) selectedLocations.push('cartoons-block');
+                }
+                
+                // Загружаем данные о локациях, если они есть в сохраненных настройках
+                if (settings.locationsData && Array.isArray(settings.locationsData)) {
+                    locationsData = settings.locationsData;
+                    updateLocationsList();
+                }
+            } catch (e) {
+                console.error('Ошибка загрузки настроек:', e);
+            }
+        }
+        
+        // Предварительная загрузка данных о локациях при загрузке страницы
+        loadLocationsData().then(data => {
+            locationsData = data;
+            // Обновляем список локаций, если есть сохраненные выборы
+            if (selectedLocations.length > 0) {
+                updateLocationsList();
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

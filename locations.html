@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Шпион - Локации</title>
+    
+    <!-- Шпионские шрифты -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Ubuntu+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/шляпа.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="img/шляпа.png">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Ubuntu Mono', monospace;
+            min-height: 100vh;
+            position: relative;
+            color: white;
+            overflow-x: hidden;
+            padding-bottom: 120px;
+        }
+
+        /* Фон с размытием */
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('img/fon2.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: -2;
+        }
+
+        /* Слой для размытия */
+        .blur-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.05);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: -1;
+        }
+
+        /* Основной контейнер */
+        .locations-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            padding-top: 40px;
+            padding-bottom: 140px;
+        }
+
+        /* Заголовок */
+        .locations-header-title {
+            font-family: 'Russo One', sans-serif;
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+            letter-spacing: 1px;
+        }
+
+        /* Секции с наборами локаций */
+        .locations-section {
+            margin-bottom: 20px;
+        }
+
+        /* Блок с набором локаций */
+        .locations-block {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            border: 2px solid rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .locations-block:hover {
+            border-color: rgba(0, 0, 0, 0.3);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        /* Кнопка раскрытия */
+        .locations-block-toggle {
+            width: 100%;
+            padding: 20px;
+            background: none;
+            border: none;
+            color: white;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+            font-family: 'Ubuntu Mono', monospace;
+            font-size: 1.2rem;
+            transition: background-color 0.3s ease;
+            position: relative;
+            z-index: 2;
+        }
+
+        .locations-block-toggle:hover {
+            background-color: rgba(0, 0, 0, 0.3);
+        }
+
+        .locations-block-toggle[aria-expanded="true"] {
+            background-color: rgba(0, 0, 0, 0.3);
+        }
+
+        /* Контейнер для заголовка и подсказки */
+        .locations-title-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            width: 100%;
+        }
+
+        /* Заголовок набора */
+        .locations-title {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+            position: relative;
+            z-index: 2;
+            margin-bottom: 5px;
+            width: 100%;
+        }
+
+        /* Подсказка - теперь под заголовком */
+        .hint {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            font-style: italic;
+            font-family: 'Ubuntu Mono', monospace;
+            position: relative;
+            z-index: 2;
+            width: 100%;
+        }
+
+        /* Содержимое с локациями */
+        .locations-block-content {
+            padding: 0 20px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+            background-color: rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .locations-block-content[aria-hidden="false"] {
+            padding: 20px;
+            max-height: 3000px; /* УВЕЛИЧИЛ для отображения всех локаций */
+        }
+
+        /* Список локаций */
+        .locations-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* Отдельная локация */
+        .location-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px 15px;
+            font-size: 1rem;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            flex: 1 0 calc(33.333% - 12px);
+            min-width: 150px;
+            text-align: left;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+
+        .location-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Кнопка назад */
+        .back-button-container {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            z-index: 10;
+            padding: 0 20px;
+        }
+
+        .back-button {
+            display: inline-block;
+            padding: 15px 30px;
+            background-color: #ffffff;
+            color: rgb(0, 0, 0);
+            text-decoration: none;
+            border-radius: 50px;
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 400;
+            border: none;
+            cursor: pointer;
+            min-width: 200px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Анимация появления блоков */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .locations-section {
+            animation: fadeInUp 0.5s ease forwards;
+            opacity: 0;
+        }
+
+        .locations-section:nth-child(1) { animation-delay: 0.1s; }
+        .locations-section:nth-child(2) { animation-delay: 0.2s; }
+        .locations-section:nth-child(3) { animation-delay: 0.3s; }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .locations-container {
+                padding: 15px;
+                padding-top: 30px;
+                padding-bottom: 130px;
+            }
+            
+            body {
+                padding-bottom: 100px;
+            }
+            
+            .locations-header-title {
+                font-size: 2rem;
+                margin-bottom: 30px;
+            }
+            
+            .locations-block-toggle {
+                padding: 15px;
+                font-size: 1.1rem;
+            }
+            
+            .locations-title {
+                font-size: 1.2rem;
+            }
+            
+            .hint {
+                font-size: 0.8rem;
+            }
+            
+            .locations-block-content {
+                padding: 0 15px;
+            }
+            
+            .locations-block-content[aria-hidden="false"] {
+                padding: 15px;
+            }
+            
+            .location-item {
+                flex: 1 0 calc(50% - 12px);
+                font-size: 0.95rem;
+                padding: 8px 12px;
+            }
+            
+            .back-button {
+                padding: 12px 25px;
+                font-size: 1.3rem;
+                min-width: 180px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .locations-header-title {
+                font-size: 1.7rem;
+            }
+            
+            .locations-title {
+                font-size: 1.1rem;
+            }
+            
+            .locations-block-toggle {
+                font-size: 1rem;
+            }
+            
+            .location-item {
+                flex: 1 0 100%;
+                font-size: 0.9rem;
+                padding: 8px 10px;
+            }
+            
+            .back-button {
+                padding: 10px 20px;
+                font-size: 1.2rem;
+                min-width: 160px;
+            }
+            
+            .locations-container {
+                padding-bottom: 120px;
+            }
+            
+            body {
+                padding-bottom: 90px;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+<div class="background"></div>
+<div class="blur-overlay"></div>
+
+<div class="locations-container">
+    <h1 class="locations-header-title"> <i class="fas fa-location-dot"></i> Локации</h1>
+    
+    <div class="locations-content">
+        <!-- Классические локации -->
+        <div class="locations-section">
+            <div class="locations-block" id="classic-block">
+                <button class="locations-block-toggle" aria-expanded="false" aria-controls="classic-content">
+                    <div class="locations-title-container">
+                        <span class="locations-title"> <i class="fas fa-theater-masks"></i> Классический набор</span>
+                        <span class="hint">(нажми для раскрытия)</span>
+                    </div>
+                </button>
+                <div class="locations-block-content" id="classic-content" aria-hidden="true" role="region">
+                    <ul class="locations-list">
+                        <li class="location-item">Школа</li>
+                        <li class="location-item">Церковь</li>
+                        <li class="location-item">Ресторан</li>
+                        <li class="location-item">Цирк</li>
+                        <li class="location-item">Самолет</li>
+                        <li class="location-item">Пляж</li>
+                        <li class="location-item">Отель</li>
+                        <li class="location-item">СПА-салон</li>
+                        <li class="location-item">Рынок</li>
+                        <li class="location-item">Киностудия</li>
+                        <li class="location-item">Больница</li>
+                        <li class="location-item">Банк</li>
+                        <li class="location-item">Казино</li>
+                        <li class="location-item">Бассейн</li>
+                        <li class="location-item">Тренажерный зал</li>
+                        <li class="location-item">Компьютерный клуб</li>
+                        <li class="location-item">Почта</li>
+                        <li class="location-item">Воинская часть</li>
+                        <li class="location-item">Пиратский корабль</li>
+                        <li class="location-item">Пожарная часть</li>
+                        <li class="location-item">Боулинг</li>
+                        <li class="location-item">Каток</li>
+                        <li class="location-item">Картинг</li>
+                        <li class="location-item">Тир</li>
+                        <li class="location-item">Зоопарк</li>
+                        <li class="location-item">Пекарня</li>
+                        <li class="location-item">Автомобильный завод</li>
+                        <li class="location-item">Шахта</li>
+                        <li class="location-item">Вокзал</li>
+                        <li class="location-item">Аэропорт</li>
+                        <li class="location-item">Пустыня</li>
+                        <li class="location-item">Деревня</li>
+                        <li class="location-item">Парк аттракционов</li>
+                        <li class="location-item">Аквапарк</li>
+                        <li class="location-item">Нудистский пляж</li>
+                        <li class="location-item">Стриптиз-бар</li>
+                        <li class="location-item">Столовая</li>
+                        <li class="location-item">Библиотека</li>
+                        <li class="location-item">Музей</li>
+                        <li class="location-item">Кладбище</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Локации Гарри Поттер -->
+        <div class="locations-section">
+            <div class="locations-block" id="potter-block">
+                <button class="locations-block-toggle" aria-expanded="false" aria-controls="potter-content">
+                    <div class="locations-title-container">
+                        <span class="locations-title"> <i class="fas fa-bolt"></i> Гарри Поттер</span>
+                        <span class="hint">(нажми для раскрытия)</span>
+                    </div>
+                </button>
+                <div class="locations-block-content" id="potter-content" aria-hidden="true" role="region">
+                    <ul class="locations-list">
+                        <li class="location-item">Хогвартс</li>
+                        <li class="location-item">Гринготтс</li>
+                        <li class="location-item">Паб "Три метлы"</li>
+                        <li class="location-item">Азкабан</li>
+                        <li class="location-item">Министерство магии</li>
+                        <li class="location-item">Дырявый котел</li>
+                        <li class="location-item">Косой переулок</li>
+                        <li class="location-item">Темный лес</li>
+                        <li class="location-item">Поле для Квидича</li>
+                        <li class="location-item">Хогватс-экспресс</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Локации из мультиков -->
+        <div class="locations-section">
+            <div class="locations-block" id="cartoons-block">
+                <button class="locations-block-toggle" aria-expanded="false" aria-controls="cartoons-content">
+                    <div class="locations-title-container">
+                        <span class="locations-title"> <i class="fas fa-film"></i> Мультики</span>
+                        <span class="hint">(нажми для раскрытия)</span>
+                    </div>
+                </button>
+                <div class="locations-block-content" id="cartoons-content" aria-hidden="true" role="region">
+                    <ul class="locations-list">
+                        <li class="location-item">Том и Джерри</li>
+                        <li class="location-item">Шрек</li>
+                        <li class="location-item">Зверополис</li>
+                        <li class="location-item">Король Лев</li>
+                        <li class="location-item">Тачки</li>
+                        <li class="location-item">Рататуй</li>
+                        <li class="location-item">Корпорация монстров</li>
+                        <li class="location-item">Спанч Боб</li>
+                        <li class="location-item">Шаман Кинг</li>
+                        <li class="location-item">Покемоны</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="back-button-container">
+    <button class="back-button" onclick="window.location.href='index.html'">Назад</button>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleButtons = document.querySelectorAll('.locations-block-toggle');
+        
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const expanded = this.getAttribute('aria-expanded') === 'true';
+                const content = document.getElementById(this.getAttribute('aria-controls'));
+                const block = this.closest('.locations-block');
+                
+                // Закрываем все другие открытые аккордеоны
+                if (!expanded) {
+                    document.querySelectorAll('.locations-block-toggle[aria-expanded="true"]').forEach(openBtn => {
+                        if (openBtn !== this) {
+                            const openContent = document.getElementById(openBtn.getAttribute('aria-controls'));
+                            openBtn.setAttribute('aria-expanded', 'false');
+                            openContent.setAttribute('aria-hidden', 'true');
+                            openContent.style.maxHeight = null;
+                        }
+                    });
+                }
+                
+                // Переключаем текущий аккордеон
+                this.setAttribute('aria-expanded', !expanded);
+                content.setAttribute('aria-hidden', expanded);
+                
+                if (!expanded) {
+                    // Открываем аккордеон
+                    const contentHeight = content.scrollHeight;
+                    content.style.maxHeight = contentHeight + 100 + 'px'; // Добавляем запас
+                    
+                    // Плавная прокрутка к элементу с учетом кнопки "Назад"
+                    setTimeout(() => {
+                        const rect = block.getBoundingClientRect();
+                        const buttonHeight = 100;
+                        const isElementFullyVisible = (
+                            rect.top >= 0 &&
+                            rect.bottom <= (window.innerHeight - buttonHeight)
+                        );
+                        
+                        // Если элемент не полностью виден, прокручиваем к нему
+                        if (!isElementFullyVisible || rect.bottom > (window.innerHeight - buttonHeight)) {
+                            const scrollToPosition = rect.top + window.pageYOffset - 30;
+                            
+                            window.scrollTo({
+                                top: scrollToPosition,
+                                behavior: 'smooth'
+                            });
+                        }
+                    }, 50);
+                } else {
+                    // Закрываем аккордеон
+                    content.style.maxHeight = null;
+                }
+            });
+        });
+        
+        const locationsSections = document.querySelectorAll('.locations-section');
+        locationsSections.forEach((section, index) => {
+            section.style.animationDelay = (index * 0.1 + 0.1) + 's';
+            section.style.opacity = '1';
+        });
+    });
+</script>
+
+</body>
+</html>

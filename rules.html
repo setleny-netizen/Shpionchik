@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Правила игры - Шпион</title>
+    
+    <!-- Шпионские шрифты -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Ubuntu+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+     <link rel="icon" type="image/x-icon" href="favicon.ico">
+     <link rel="icon" type="image/png" sizes="32x32" href="img/шляпа.png">
+     <link rel="apple-touch-icon" sizes="180x180" href="img/шляпа.png">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Ubuntu Mono', monospace;
+            min-height: 100vh;
+            position: relative;
+            color: white;
+            overflow-x: hidden;
+            padding-bottom: 100px; /* Добавим отступ снизу для body */
+        }
+
+        /* Фон с размытием */
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('img/fon2.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: -2;
+        }
+
+        /* Слой для размытия */
+        .blur-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.05);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: -1;
+        }
+
+        /* Основной контейнер */
+        .rules-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            padding-top: 40px;
+            padding-bottom: 10px; /* Увеличил отступ снизу */
+        }
+
+        /* Заголовок */
+        .rules-header-title {
+            font-family: 'Russo One', sans-serif;
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+            letter-spacing: 1px;
+        }
+
+        /* Секции с правилами */
+        .rule-section {
+            margin-bottom: 20px;
+        }
+
+        /* Блок с правилом */
+        .rule-block {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            border: 2px solid rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .rule-block:hover {
+            border-color: rgba(0, 0, 0, 0.3);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        /* Кнопка раскрытия */
+        .rule-block-toggle {
+            width: 100%;
+            padding: 20px;
+            background: none;
+            border: none;
+            color: white;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'Ubuntu Mono', monospace;
+            font-size: 1.2rem;
+            transition: background-color 0.3s ease;
+            position: relative;
+            z-index: 2;
+        }
+
+        .rule-block-toggle:hover {
+            background-color: rgba(0, 0, 0, 0.3);
+        }
+
+        .rule-block-toggle[aria-expanded="true"] {
+            background-color: rgba(0, 0, 0, 0.3);
+        }
+
+        /* Заголовок правила */
+        .rule-title {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Подсказка */
+        .hint {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            font-style: italic;
+            margin-left: 10px;
+            font-family: 'Ubuntu Mono', monospace;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Содержимое правила */
+        .rule-block-content {
+            padding: 0 20px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+            background-color: rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .rule-block-content[aria-hidden="false"] {
+            padding: 20px;
+            max-height: 1000px;
+        }
+
+        /* Текст внутри блоков */
+        .rule-block-content p {
+            margin-bottom: 15px;
+            line-height: 1.6;
+            font-size: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .rule-block-content strong {
+            color: #ffcc00;
+            font-weight: bold;
+        }
+
+        /* Кнопка назад */
+        .back-button-container {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            z-index: 10;
+            padding: 0 20px;
+        }
+
+        .back-button {
+            display: inline-block;
+            padding: 15px 30px;
+            background-color: #ffffff;
+            color: rgb(0, 0, 0);
+            text-decoration: none;
+            border-radius: 50px;
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 400;
+            border: none;
+            cursor: pointer;
+            min-width: 200px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Анимация появления блоков */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .rule-section {
+            animation: fadeInUp 0.5s ease forwards;
+            opacity: 0;
+        }
+
+        .rule-section:nth-child(1) { animation-delay: 0.1s; }
+        .rule-section:nth-child(2) { animation-delay: 0.2s; }
+        .rule-section:nth-child(3) { animation-delay: 0.3s; }
+        .rule-section:nth-child(4) { animation-delay: 0.4s; }
+        .rule-section:nth-child(5) { animation-delay: 0.5s; }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .rules-container {
+                padding: 15px;
+                padding-top: 30px;
+                padding-bottom: 10px; /* Увеличил для мобильных */
+            }
+            
+            body {
+                padding-bottom: 10px; /* Меньше отступ для мобильных */
+            }
+            
+            .rules-header-title {
+                font-size: 2rem;
+                margin-bottom: 30px;
+            }
+            
+            .rule-block-toggle {
+                padding: 15px;
+                font-size: 1.1rem;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .rule-title {
+                font-size: 1.2rem;
+                margin-bottom: 5px;
+            }
+            
+            .hint {
+                margin-left: 0;
+                font-size: 0.8rem;
+            }
+            
+            .rule-block-content {
+                padding: 0 15px;
+            }
+            
+            .rule-block-content[aria-hidden="false"] {
+                padding: 15px;
+            }
+            
+            .back-button {
+                padding: 12px 25px;
+                font-size: 1.3rem;
+                min-width: 180px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .rules-header-title {
+                font-size: 1.7rem;
+            }
+            
+            .rule-title {
+                font-size: 1.1rem;
+            }
+            
+            .rule-block-toggle {
+                font-size: 1rem;
+            }
+            
+            .rule-block-content p {
+                font-size: 0.95rem;
+            }
+            
+            .back-button {
+                padding: 10px 20px;
+                font-size: 1.2rem;
+                min-width: 160px;
+            }
+            
+            .rules-container {
+                padding-bottom: 10px; /* Еще больше для очень маленьких экранов */
+            }
+            
+            body {
+                padding-bottom: 70px;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+<div class="background"></div>
+<div class="blur-overlay"></div>
+
+<div class="rules-container">
+    <h1 class="rules-header-title"><i class="fas fa-book-reader"></i> Правила игры</h1>
+    
+    <div class="rules-content">
+        <div class="rule-section">
+            <div class="rule-block" id="description-block">
+                <button class="rule-block-toggle" aria-expanded="false" aria-controls="description-content">
+                    <span class="rule-title"><i class="fas fa-book"></i> Описание игры</span>
+                    <span class="hint">(нажми для раскрытия)</span>
+                </button>
+                <div class="rule-block-content" id="description-content" aria-hidden="true" role="region">
+                    <p><strong>Шпион</strong> — это игра для компании от 3 человек.</p>
+                    <p>Игроки получают карточки: на них либо указана общая для всех локация, либо карточка с ролью шпиона.</p>
+                    <p>Шпионы не знают локацию и стараются её угадать. Мирные игроки знают локацию и пытаются вычислить шпиона.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="rule-section">
+            <div class="rule-block" id="process-block">
+                <button class="rule-block-toggle" aria-expanded="false" aria-controls="process-content">
+                    <span class="rule-title"><i class="fas fa-theater-masks"></i> Процесс игры</span>
+                    <span class="hint">(нажми для раскрытия)</span>
+                </button>
+                <div class="rule-block-content" id="process-content" aria-hidden="true" role="region">
+                    <p>Первый игрок задаёт вопрос любому другому.</p>
+                    <p>Затем отвечавший задаёт вопрос следующему, но не тому, кто спрашивал его.</p>
+                    <p>Вопросы должны показывать, что вы знаете локацию, но при этом не выдавать её шпиону.</p>
+                    <p>В любой момент игрок может предложить провести голосование за изгнание подозреваемого.</p>
+                    <p>Шпион в любой момент может раскрыться и попробовать угадать локацию.</p>
+                    <p>Когда истекает таймер, проводится финальное голосование.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="rule-section">
+            <div class="rule-block" id="civilian-win-block">
+                <button class="rule-block-toggle" aria-expanded="false" aria-controls="civilian-win-content">
+                    <span class="rule-title"><i class="fas fa-shield-alt"></i> Победа мирных</span>
+                    <span class="hint">(нажми для раскрытия)</span>
+                </button>
+                <div class="rule-block-content" id="civilian-win-content" aria-hidden="true" role="region">
+                    <p>Мирные побеждают, если из игры выведен последний шпион.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="rule-section">
+            <div class="rule-block" id="spy-win-block">
+                <button class="rule-block-toggle" aria-expanded="false" aria-controls="spy-win-content">
+                    <span class="rule-title"><i class="fas fa-user-secret"></i> Победа шпионов</span>
+                    <span class="hint">(нажми для раскрытия)</span>
+                </button>
+                <div class="rule-block-content" id="spy-win-content" aria-hidden="true" role="region">
+                    <p>Любой шпион в любой момент прерывает игру и правильно называет локацию.</p>
+                    <p>Все мирные игроки выведены из игры.</p>
+                    <p>Если в игре остаются один мирный и один шпион, шпиону предлагается угадать локацию.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="rule-section">
+            <div class="rule-block" id="offline-block">
+                <button class="rule-block-toggle" aria-expanded="false" aria-controls="offline-content">
+                    <span class="rule-title"><i class="fas fa-globe + fas fa-ban"></i> Оффлайн раздача карт</span>
+                    <span class="hint">(нажми для раскрытия)</span>
+                </button>
+                <div class="rule-block-content" id="offline-content" aria-hidden="true" role="region">
+                    <p>После создания игры на экране появляется набор карточек.</p>
+                    <p>Каждый игрок по очереди берёт карту: нажимает, чтобы посмотреть её, затем смахивает и передаёт телефон следующему игроку.</p>
+                    <p>Имя того, кому предназначена текущая карта, отображается сверху экрана.</p>
+                    <p>Подходит для игры в небольшой компании, когда все находятся рядом.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="back-button-container">
+    <button class="back-button" onclick="window.location.href='index.html'">Назад</button>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleButtons = document.querySelectorAll('.rule-block-toggle');
+        
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const expanded = this.getAttribute('aria-expanded') === 'true';
+                const content = document.getElementById(this.getAttribute('aria-controls'));
+                const block = this.closest('.rule-block');
+                
+                // Закрываем все другие открытые аккордеоны
+                if (!expanded) {
+                    document.querySelectorAll('.rule-block-toggle[aria-expanded="true"]').forEach(openBtn => {
+                        if (openBtn !== this) {
+                            const openContent = document.getElementById(openBtn.getAttribute('aria-controls'));
+                            openBtn.setAttribute('aria-expanded', 'false');
+                            openContent.setAttribute('aria-hidden', 'true');
+                            openContent.style.maxHeight = null;
+                        }
+                    });
+                }
+                
+                // Переключаем текущий аккордеон
+                this.setAttribute('aria-expanded', !expanded);
+                content.setAttribute('aria-hidden', expanded);
+                
+                if (!expanded) {
+                    // Открываем аккордеон
+                    content.style.maxHeight = content.scrollHeight + 'px';
+                    
+                    // Плавная прокрутка к элементу с учетом кнопки "Назад"
+                    setTimeout(() => {
+                        const rect = block.getBoundingClientRect();
+                        const buttonHeight = 80; // Высота кнопки "Назад" с отступами
+                        const isElementFullyVisible = (
+                            rect.top >= 0 &&
+                            rect.bottom <= (window.innerHeight - buttonHeight) // Учитываем высоту кнопки
+                        );
+                        
+                        // Если элемент не полностью виден (учитывая кнопку), прокручиваем к нему
+                        if (!isElementFullyVisible || rect.bottom > (window.innerHeight - buttonHeight)) {
+                            // Рассчитываем позицию для прокрутки с запасом
+                            const scrollToPosition = rect.top + window.pageYOffset - 20;
+                            
+                            window.scrollTo({
+                                top: scrollToPosition,
+                                behavior: 'smooth'
+                            });
+                        }
+                    }, 50);
+                } else {
+                    // Закрываем аккордеон
+                    content.style.maxHeight = null;
+                }
+            });
+        });
+        
+        const ruleSections = document.querySelectorAll('.rule-section');
+        ruleSections.forEach((section, index) => {
+            section.style.animationDelay = (index * 0.1 + 0.1) + 's';
+            section.style.opacity = '1';
+        });
+    });
+</script>
+
+</body>
+</html>
