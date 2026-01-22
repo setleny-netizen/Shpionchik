@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Шпион - Игра</title>
+    
+    <!-- Шпионские шрифты -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Ubuntu+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/шляпа.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="img/шляпа.png">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Ubuntu Mono', monospace;
+            min-height: 100vh;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            color: white;
+            text-align: center;
+            overflow: hidden;
+            touch-action: pan-y;
+        }
+
+        /* Фон с размытием */
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('img/fon2.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: -2;
+            background-color: #2c3e50;
+        }
+
+        /* Слой для размытия */
+        .blur-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.05);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: -1;
+        }
+
+        /* КОНТЕЙНЕР ДЛЯ КОЛОДЫ КАРТ И ТЕКСТА */
+        .cards-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1;
+            gap: 30px;
+        }
+
+        /* БЛЮРНЫЙ БЛОК */
+        .blur-block {
+            width: 320px;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        /* ТЕКСТ ИМЕНИ ИГРОКА */
+        .blur-text {
+            font-family: 'Russo One', sans-serif;
+            font-size: 2.5rem;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+        }
+
+        /* КОНТЕЙНЕР ДЛЯ СТОПКИ КАРТ */
+        .card-stack {
+            position: relative;
+            width: 220px;
+            height: 330px;
+        }
+
+        /* КАРТА */
+        .card {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            user-select: none;
+            border-radius: 16px;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-style: preserve-3d;
+        }
+
+        /* ПЕРЕВЕРНУТАЯ КАРТА */
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        /* БЫСТРАЯ АНИМАЦИЯ ПЕРЕВОРОТА */
+        @keyframes flipCard {
+            0% {
+                transform: perspective(1000px) rotateY(0deg);
+            }
+            50% {
+                transform: perspective(1000px) rotateY(90deg) scale(1.02);
+            }
+            100% {
+                transform: perspective(1000px) rotateY(180deg);
+            }
+        }
+
+        @keyframes unflipCard {
+            0% {
+                transform: perspective(1000px) rotateY(180deg);
+            }
+            50% {
+                transform: perspective(1000px) rotateY(90deg) scale(1.02);
+            }
+            100% {
+                transform: perspective(1000px) rotateY(0deg);
+            }
+        }
+
+        .card.flip-animation {
+            animation: flipCard 0.4s forwards;
+        }
+
+        .card.unflip-animation {
+            animation: unflipCard 0.4s forwards;
+        }
+
+        /* УДАЛЕННАЯ КАРТА */
+        .card.removed {
+            opacity: 0;
+            transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.3s;
+        }
+
+        /* СТОРОНЫ КАРТЫ */
+        .card-side {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 16px;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* ЛИЦЕВАЯ СТОРОНА */
+        .card-front {
+            background-image: url('img/card2.png');
+            background-size: cover;
+            background-position: center;
+            border: 4px solid wheat;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            background-color: #8b4513;
+        }
+
+        /* ОБОРОТНАЯ СТОРОНА - ПРОСТОЙ ГРАДИЕНТ */
+        .card-back {
+            background: linear-gradient(135deg, #8B7355 0%, #D2B48C 100%);
+            border: 4px solid wheat;
+            box-shadow: 
+                0 5px 15px rgba(0, 0, 0, 0.3),
+                inset 0 0 20px rgba(255, 255, 255, 0.15);
+            transform: rotateY(180deg);
+            padding: 15px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ТЕКСТУРА ФОНА */
+        .card-back::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.08) 1px, transparent 2px),
+                radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.06) 1px, transparent 2px);
+            background-size: 70px 70px, 50px 50px;
+            opacity: 0.5;
+            z-index: 1;
+        }
+
+        /* ИСПРАВЛЕННЫЙ АДАПТИВНЫЙ ТЕКСТ ЛОКАЦИИ - МОЖЕТ БЫТЬ МНОГОСТРОЧНЫМ */
+        .location-text {
+            font-family: 'Russo One', sans-serif;
+            color: #3E2723;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            position: relative;
+            z-index: 2;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.7);
+            white-space: normal;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 2.2rem;
+            line-height: 1.1;
+            word-wrap: break-word;
+            word-break: break-word;
+        }
+
+        /* ТЕКСТ ШПИОНА - АДАПТИВНЫЙ К РАЗМЕРУ КАРТЫ */
+        .spy-text {
+            font-family: 'Russo One', sans-serif;
+            color: #8B0000;
+            font-weight: bold;
+            text-transform: uppercase;
+            text-shadow: 
+                2px 2px 4px rgba(139, 0, 0, 0.3),
+                1px 1px 3px rgba(255, 255, 255, 0.7);
+            line-height: 1;
+            text-align: center;
+            margin: 0;
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            border: 2px solid rgba(139, 0, 0, 0.2);
+            position: relative;
+            z-index: 2;
+            overflow: hidden;
+            white-space: nowrap;
+            font-size: 3.0rem;
+            letter-spacing: 2px;
+            max-width: 90%;
+        }
+
+        .spy-text::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.3) 50%, transparent 70%);
+            z-index: 1;
+            animation: shine 3s infinite linear;
+        }
+
+        @keyframes shine {
+            0% {
+                transform: translateX(-100%);
+            }
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        /* ПРАВИЛА РАУНДА - ИСПРАВЛЕНО ЦЕНТРИРОВАНИЕ */
+        .round-rules {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            width: 100%;
+            text-align: center;
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .round-rules.show {
+            display: flex;
+        }
+
+        .rules-title {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.6rem;
+            color: #FFD700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
+            margin-bottom: 5px;
+        }
+
+        .rules-list {
+            text-align: left;
+            font-size: 1rem;
+            line-height: 1.4;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
+            list-style-type: none;
+            padding: 0 5px;
+            margin: 0 auto;
+            max-width: 280px;
+        }
+
+        .rules-list li {
+            margin-bottom: 8px;
+            padding-left: 15px;
+            position: relative;
+        }
+
+        .rules-list li:before {
+            content: '•';
+            color: #FFD700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
+            font-size: 1.2rem;
+            position: absolute;
+            left: 0;
+            top: -1px;
+        }
+
+        .rules-ready-text {
+            font-size: 1rem;
+            color: #FFD700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
+            margin: 5px 0;
+            text-align: center;
+        }
+
+        /* КНОПКА СТАРТ - БЕЛАЯ */
+        .start-button {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.6rem;
+            color: #333;
+            background: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 35px;
+            margin-top: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: bold;
+        }
+
+        .start-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(255, 255, 255, 0.4);
+            background: #f5f5f5;
+        }
+
+        .start-button:active {
+            transform: scale(0.98);
+        }
+
+        /* АНИМАЦИЯ ДЛЯ ИМЕНИ ИГРОКА */
+        @keyframes playerChange {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .player-changing {
+            animation: playerChange 0.3s ease;
+        }
+
+        /* АДАПТИВНОСТЬ */
+        @media (max-width: 992px) {
+            .cards-container {
+                gap: 25px;
+            }
+            
+            .blur-block {
+                width: 300px;
+                padding: 20px;
+            }
+            
+            .blur-text {
+                font-size: 2.2rem;
+            }
+            
+            .card-stack {
+                width: 220px;
+                height: 330px;
+            }
+            
+            .location-text {
+                font-size: 2.0rem;
+            }
+            
+            .spy-text {
+                font-size: 2.6rem;
+                padding: 8px 12px;
+                letter-spacing: 1.5px;
+            }
+            
+            .rules-title {
+                font-size: 1.5rem;
+            }
+            
+            .rules-list {
+                font-size: 0.95rem;
+                max-width: 260px;
+            }
+            
+            .start-button {
+                font-size: 1.5rem;
+                padding: 10px 30px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .cards-container {
+                gap: 25px;
+            }
+            
+            .blur-block {
+                width: 320px;
+                padding: 20px;
+            }
+            
+            .blur-text {
+                font-size: 2.5rem;
+            }
+            
+            .card-stack {
+                width: 300px;
+                height: 450px;
+            }
+            
+            .location-text {
+                font-size: 2.4rem;
+            }
+            
+            .spy-text {
+                font-size: 3.2rem;
+                padding: 12px 18px;
+                letter-spacing: 2px;
+            }
+            
+            .rules-title {
+                font-size: 1.6rem;
+            }
+            
+            .rules-list {
+                font-size: 1rem;
+                max-width: 280px;
+            }
+            
+            .start-button {
+                font-size: 1.6rem;
+                padding: 12px 35px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .cards-container {
+                gap: 20px;
+            }
+            
+            .blur-block {
+                width: 280px;
+                padding: 18px;
+            }
+            
+            .blur-text {
+                font-size: 2.2rem;
+            }
+            
+            .card-stack {
+                width: 280px;
+                height: 420px;
+            }
+            
+            .location-text {
+                font-size: 2.0rem;
+            }
+            
+            .spy-text {
+                font-size: 2.8rem;
+                padding: 8px 14px;
+                letter-spacing: 1.5px;
+            }
+            
+            .rules-title {
+                font-size: 1.5rem;
+            }
+            
+            .rules-list {
+                font-size: 0.95rem;
+                max-width: 250px;
+            }
+            
+            .start-button {
+                font-size: 1.5rem;
+                padding: 10px 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+<div class="background"></div>
+<div class="blur-overlay"></div>
+
+<div class="cards-container">
+    <!-- БЛЮРНЫЙ БЛОК С ИМЕНЕМ ИГРОКА -->
+    <div class="blur-block">
+        <div class="blur-text" id="currentPlayerName">
+            <span id="playerEmoji"></span>
+            <span id="playerName">Загрузка...</span>
+        </div>
+        
+        <!-- Правила раунда (скрыто изначально) -->
+        <div class="round-rules" id="roundRules">
+            <div class="rules-title">Правила раунда</div>
+            <ul class="rules-list">
+                <li>Каждый игрок задает вопрос любому другому игроку, связанный с локацией</li>
+                <li>Нельзя задавать вопрос тому, кто только что задал вопрос вам</li>
+                <li>Шпионы не знают локацию и пытаются ее узнать</li>
+                <li>Задавайте вопросы, которые не выдадут вас, если вы шпион</li>
+                <li>Если вы мирный - выбирайте вопросы осторожно, чтобы не выдать локацию шпиону</li>
+            </ul>
+            <div class="rules-ready-text">
+                Как будете готовы нажмите кнопку "Старт"
+            </div>
+            <button class="start-button" id="startButton">
+                СТАРТ
+            </button>
+        </div>
+    </div>
+    
+    <!-- КОЛОДА КАРТ -->
+    <div class="card-stack" id="cardStack">
+        <!-- Карты будут созданы динамически -->
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const cardStack = document.getElementById('cardStack');
+        const playerName = document.getElementById('playerName');
+        const playerEmoji = document.getElementById('playerEmoji');
+        const blurBlock = document.querySelector('.blur-block');
+        const roundRules = document.getElementById('roundRules');
+        const startButton = document.getElementById('startButton');
+        const blurText = document.querySelector('.blur-text');
+        
+        // Константы
+        const SWIPE_THRESHOLD = 50;
+        const CARD_STACK_OFFSET = 3;
+        const MIN_SWIPE_VELOCITY = 0.5;
+        
+        // Переменные игры
+        let gameSettings = null;
+        let players = [];
+        let currentPlayerIndex = 0;
+        let cards = [];
+        let allLocations = [];
+        
+        // Переменные для свайпа
+        let startX = 0, startY = 0, currentX = 0, currentY = 0;
+        let startTime = 0;
+        let isSwiping = false, currentCard = null;
+        let isAnimating = false;
+        
+        // Загрузка настроек игры
+        function loadGameSettings() {
+            try {
+                const savedSettings = localStorage.getItem('spyGameSettings');
+                if (savedSettings) {
+                    gameSettings = JSON.parse(savedSettings);
+                    players = gameSettings.players || [];
+                    
+                    if (players.length < 3) {
+                        alert('Недостаточно игроков! Вернитесь в настройки и добавьте минимум 3 игрока.');
+                        return false;
+                    }
+                    
+                    loadSelectedLocations();
+                    return true;
+                } else {
+                    alert('Настройки игры не найдены! Вернитесь на страницу настроек.');
+                    return false;
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки настроек:', error);
+                alert('Ошибка загрузки настроек игры!');
+                return false;
+            }
+        }
+        
+        // Загрузка локаций из выбранных наборов
+        function loadSelectedLocations() {
+            allLocations = [];
+            
+            if (gameSettings.locationsData && Array.isArray(gameSettings.locationsData)) {
+                gameSettings.locationsData.forEach(locationSet => {
+                    if (locationSet.locations && Array.isArray(locationSet.locations)) {
+                        allLocations = allLocations.concat(locationSet.locations);
+                    }
+                });
+            }
+        }
+        
+        // Получение случайной локации
+        function getRandomLocation() {
+            if (allLocations.length === 0) {
+                return "Выберите локации в настройках";
+            }
+            
+            const randomIndex = Math.floor(Math.random() * allLocations.length);
+            return allLocations[randomIndex];
+        }
+        
+        // Определение ролей игроков
+        function assignRoles() {
+            const totalPlayers = players.length;
+            const spyCount = parseInt(gameSettings.spies) || 1;
+            
+            if (spyCount < 1) {
+                alert('Количество шпионов должно быть не менее 1!');
+                return false;
+            }
+            
+            if (spyCount >= totalPlayers) {
+                alert('Количество шпионов должно быть меньше количества игроков!');
+                return false;
+            }
+            
+            let roles = [];
+            
+            for (let i = 0; i < spyCount; i++) {
+                roles.push('Шпион');
+            }
+            
+            for (let i = spyCount; i < totalPlayers; i++) {
+                roles.push('Мирный житель');
+            }
+            
+            // Перемешиваем роли
+            for (let i = roles.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [roles[i], roles[j]] = [roles[j], roles[i]];
+            }
+            
+            const gameLocation = getRandomLocation();
+            
+            players.forEach((player, index) => {
+                player.role = roles[index];
+                player.isSpy = player.role === 'Шпион';
+                player.location = player.isSpy ? null : gameLocation;
+            });
+            
+            gameSettings.gameLocation = gameLocation;
+            return true;
+        }
+        
+        // Функция для адаптации размера текста
+        function adjustTextSize(textElement, isSpy = false) {
+            const container = textElement.parentElement;
+            const containerWidth = container.clientWidth - 30;
+            const containerHeight = container.clientHeight - 30;
+            
+            let fontSize = isSpy ? 3.0 : 2.2; // Начальный размер
+            textElement.style.fontSize = fontSize + 'rem';
+            
+            // Для локаций разрешаем перенос строк
+            if (!isSpy) {
+                textElement.style.whiteSpace = 'normal';
+                textElement.style.wordWrap = 'break-word';
+                textElement.style.wordBreak = 'break-word';
+                textElement.style.lineHeight = '1.1';
+            } else {
+                // Для шпиона - одна строка
+                textElement.style.letterSpacing = '2px';
+            }
+            
+            // Проверяем, помещается ли текст
+            let textWidth = textElement.scrollWidth;
+            let textHeight = textElement.scrollHeight;
+            
+            // Минимальный размер шрифта
+            const minFontSize = isSpy ? 1.8 : 1.2;
+            
+            // Уменьшаем размер, пока текст не поместится
+            while ((textWidth > containerWidth || textHeight > containerHeight) && fontSize > minFontSize) {
+                fontSize -= 0.1;
+                textElement.style.fontSize = fontSize + 'rem';
+                
+                // Для шпиона также уменьшаем letter-spacing
+                if (isSpy && fontSize < 2.5) {
+                    textElement.style.letterSpacing = (fontSize * 0.6) + 'px';
+                }
+                
+                textWidth = textElement.scrollWidth;
+                textHeight = textElement.scrollHeight;
+            }
+            
+            // Для локаций гарантируем, что текст не выходит за пределы
+            if (!isSpy) {
+                textElement.style.overflow = 'hidden';
+                textElement.style.maxHeight = '100%';
+                textElement.style.maxWidth = '100%';
+            }
+        }
+        
+        // Создание карт для каждого игрока
+        function createPlayerCards() {
+            cardStack.innerHTML = '';
+            cards = [];
+            
+            players.forEach((player, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.dataset.playerIndex = index;
+                
+                let cardContent = '';
+                
+                if (player.isSpy) {
+                    // ТОЛЬКО ТЕКСТ, БЕЗ КАРТИНКИ
+                    cardContent = `<div class="spy-text">ШПИОН</div>`;
+                } else {
+                    cardContent = `<div class="location-text">${player.location}</div>`;
+                }
+                
+                card.innerHTML = `
+                    <div class="card-side card-front"></div>
+                    <div class="card-side card-back">
+                        ${cardContent}
+                    </div>
+                `;
+                
+                cardStack.appendChild(card);
+                cards.push(card);
+                
+                const offset = index * CARD_STACK_OFFSET;
+                card.style.transform = `translateY(${offset}px)`;
+                card.style.zIndex = index + 1;
+                
+                // Подстраиваем размер текста после создания карты
+                setTimeout(() => {
+                    const textElement = card.querySelector(player.isSpy ? '.spy-text' : '.location-text');
+                    if (textElement) {
+                        adjustTextSize(textElement, player.isSpy);
+                    }
+                }, 50);
+            });
+            
+            updateCurrentPlayer();
+        }
+        
+        // Обновление отображаемого имени и смайлика игрока
+        function updateCurrentPlayer() {
+            if (players.length > 0 && currentPlayerIndex < players.length) {
+                const currentPlayer = players[currentPlayerIndex];
+                playerName.textContent = currentPlayer.name;
+                playerEmoji.textContent = currentPlayer.emoji || '😀';
+                
+                blurBlock.classList.add('player-changing');
+                setTimeout(() => {
+                    blurBlock.classList.remove('player-changing');
+                }, 300);
+            }
+        }
+        
+        // Переход к следующему игроку
+        function goToNextPlayer() {
+            currentPlayerIndex++;
+            
+            if (currentPlayerIndex >= players.length) {
+                showRoundRules();
+                return false;
+            }
+            
+            updateCurrentPlayer();
+            return true;
+        }
+        
+        // Показать правила раунда - УПРОЩЕННАЯ ВЕРСИЯ
+        function showRoundRules() {
+            // Плавно скрываем имя игрока
+            blurText.style.opacity = '0';
+            
+            setTimeout(() => {
+                // Скрываем имя игрока
+                blurText.style.display = 'none';
+                
+                // Показываем правила раунда
+                roundRules.classList.add('show');
+            }, 300);
+        }
+        
+        // ФУНКЦИЯ ПЕРЕВОРОТА КАРТЫ (открытие)
+        function flipCardOpen(card) {
+            if (isAnimating || !card || card.classList.contains('removed')) return;
+            
+            isAnimating = true;
+            
+            card.classList.remove('flipped');
+            card.classList.add('flip-animation');
+            
+            setTimeout(() => {
+                card.classList.remove('flip-animation');
+                card.classList.add('flipped');
+                
+                const playerIndex = parseInt(card.dataset.playerIndex);
+                const offset = playerIndex * CARD_STACK_OFFSET;
+                card.style.transform = `translateY(${offset}px) rotateY(180deg)`;
+                card.style.zIndex = 1000;
+                
+                isAnimating = false;
+            }, 400);
+        }
+        
+        // ФУНКЦИЯ ОБРАТНОГО ПЕРЕВОРОТА КАРТЫ (закрытие)
+        function flipCardClose(card) {
+            if (isAnimating || !card || card.classList.contains('removed')) return;
+            
+            isAnimating = true;
+            
+            card.classList.add('unflip-animation');
+            
+            setTimeout(() => {
+                card.classList.remove('unflip-animation');
+                card.classList.remove('flipped');
+                
+                const playerIndex = parseInt(card.dataset.playerIndex);
+                const offset = playerIndex * CARD_STACK_OFFSET;
+                card.style.transform = `translateY(${offset}px)`;
+                card.style.zIndex = playerIndex + 1;
+                
+                isAnimating = false;
+            }, 400);
+        }
+        
+        // Функция для удаления карты с анимацией свайпа
+        function swipeCard(card, diffX, diffY) {
+            if (isAnimating || !card) return;
+            
+            isAnimating = true;
+            
+            const distance = Math.sqrt(diffX * diffX + diffY * diffY);
+            const velocity = distance / (Date.now() - startTime);
+            const angle = Math.atan2(diffY, diffX) * (180 / Math.PI);
+            
+            const multiplier = Math.max(1.5, velocity * 1.5);
+            const targetX = diffX * multiplier;
+            const targetY = diffY * multiplier;
+            const rotation = angle * 0.3;
+            
+            card.style.transition = 'transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.3s';
+            card.style.transform = `translate(${targetX}px, ${targetY}px) rotate(${rotation}deg) scale(0.9)`;
+            card.classList.add('removed');
+            
+            setTimeout(() => {
+                if (card.parentNode) {
+                    card.parentNode.removeChild(card);
+                    goToNextPlayer();
+                    isAnimating = false;
+                }
+            }, 300);
+        }
+        
+        // Функция проверки, можно ли скинуть карту
+        function canSwipeCard(card) {
+            return card && card.classList.contains('flipped') && !card.classList.contains('removed');
+        }
+        
+        // Функция сброса карты на место
+        function resetCardPosition(card) {
+            if (!card) return;
+            
+            const playerIndex = parseInt(card.dataset.playerIndex);
+            const offset = playerIndex * CARD_STACK_OFFSET;
+            
+            card.style.transition = 'transform 0.2s ease';
+            
+            if (card.classList.contains('flipped')) {
+                card.style.transform = `translateY(${offset}px) rotateY(180deg)`;
+                card.style.zIndex = 1000;
+            } else {
+                card.style.transform = `translateY(${offset}px)`;
+                card.style.zIndex = playerIndex + 1;
+            }
+        }
+        
+        // Инициализация игры
+        function initGame() {
+            if (!loadGameSettings()) return;
+            if (!assignRoles()) return;
+            
+            createPlayerCards();
+            setupEventListeners();
+            
+// Добавляем обработчик для кнопки СТАРТ
+startButton.addEventListener('click', function() {
+    window.location.href = 'taimer-game.html';
+});
+        }
+        
+        // Настройка обработчиков событий
+        function setupEventListeners() {
+            cards.forEach(card => {
+                card.addEventListener('click', function(e) {
+                    if (!isSwiping && !isAnimating) {
+                        if (this.classList.contains('flipped')) {
+                            flipCardClose(this);
+                        } else {
+                            flipCardOpen(this);
+                        }
+                    }
+                });
+                
+                card.addEventListener('touchstart', function(e) {
+                    if (!canSwipeCard(this) || isAnimating) return;
+                    
+                    const touch = e.touches[0];
+                    startX = touch.clientX;
+                    startY = touch.clientY;
+                    startTime = Date.now();
+                    currentCard = this;
+                    isSwiping = false;
+                    
+                    this.style.transition = 'none';
+                }, { passive: true });
+                
+                card.addEventListener('touchmove', function(e) {
+                    if (!currentCard || !canSwipeCard(currentCard) || isAnimating) return;
+                    
+                    const touch = e.touches[0];
+                    currentX = touch.clientX;
+                    currentY = touch.clientY;
+                    
+                    const diffX = currentX - startX;
+                    const diffY = currentY - startY;
+                    
+                    if (!isSwiping && (Math.abs(diffX) > 5 || Math.abs(diffY) > 5)) {
+                        isSwiping = true;
+                    }
+                    
+                    if (isSwiping) {
+                        e.preventDefault();
+                        
+                        const playerIndex = parseInt(this.dataset.playerIndex);
+                        const offset = playerIndex * CARD_STACK_OFFSET;
+                        const rotation = (diffX + diffY) * 0.08;
+                        
+                        this.style.transform = `translateY(${offset}px) rotateY(180deg) translate(${diffX}px, ${diffY}px) rotate(${rotation}deg)`;
+                    }
+                }, { passive: false });
+                
+                card.addEventListener('touchend', function(e) {
+                    if (!currentCard || !canSwipeCard(currentCard) || isAnimating) return;
+                    
+                    const diffX = currentX - startX;
+                    const diffY = currentY - startY;
+                    const distance = Math.sqrt(diffX * diffX + diffY * diffY);
+                    const velocity = distance / (Date.now() - startTime);
+                    
+                    if (isSwiping && (distance > SWIPE_THRESHOLD || velocity > MIN_SWIPE_VELOCITY)) {
+                        swipeCard(this, diffX, diffY);
+                    } else {
+                        resetCardPosition(this);
+                    }
+                    
+                    currentCard = null;
+                    isSwiping = false;
+                }, { passive: true });
+                
+                card.addEventListener('mousedown', function(e) {
+                    if (!canSwipeCard(this) || isAnimating) return;
+                    
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    startTime = Date.now();
+                    currentCard = this;
+                    isSwiping = false;
+                    
+                    this.style.transition = 'none';
+                    this.style.cursor = 'grabbing';
+                });
+                
+                document.addEventListener('mousemove', function(e) {
+                    if (!currentCard || !canSwipeCard(currentCard) || isAnimating) return;
+                    
+                    currentX = e.clientX;
+                    currentY = e.clientY;
+                    
+                    const diffX = currentX - startX;
+                    const diffY = currentY - startY;
+                    
+                    if (!isSwiping && (Math.abs(diffX) > 5 || Math.abs(diffY) > 5)) {
+                        isSwiping = true;
+                    }
+                    
+                    if (isSwiping) {
+                        const playerIndex = parseInt(currentCard.dataset.playerIndex);
+                        const offset = playerIndex * CARD_STACK_OFFSET;
+                        const rotation = (diffX + diffY) * 0.08;
+                        
+                        currentCard.style.transform = `translateY(${offset}px) rotateY(180deg) translate(${diffX}px, ${diffY}px) rotate(${rotation}deg)`;
+                    }
+                });
+                
+                document.addEventListener('mouseup', function() {
+                    if (!currentCard || !canSwipeCard(currentCard) || isAnimating) return;
+                    
+                    const diffX = currentX - startX;
+                    const diffY = currentY - startY;
+                    const distance = Math.sqrt(diffX * diffX + diffY * diffY);
+                    const velocity = distance / (Date.now() - startTime);
+                    
+                    currentCard.style.cursor = 'pointer';
+                    
+                    if (isSwiping && (distance > SWIPE_THRESHOLD || velocity > MIN_SWIPE_VELOCITY)) {
+                        swipeCard(currentCard, diffX, diffY);
+                    } else {
+                        resetCardPosition(currentCard);
+                    }
+                    
+                    currentCard = null;
+                    isSwiping = false;
+                });
+                
+                card.addEventListener('touchcancel', function() {
+                    if (currentCard === this) {
+                        resetCardPosition(this);
+                        currentCard = null;
+                        isSwiping = false;
+                    }
+                });
+            });
+            
+            document.addEventListener('contextmenu', function(e) {
+                if (e.target.classList.contains('card')) {
+                    e.preventDefault();
+                }
+            });
+        }
+        
+        initGame();
+    });
+</script>
+
+</body>
+</html>
