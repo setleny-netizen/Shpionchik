@@ -2,1092 +2,1485 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Шпион - Игра</title>
-    
-    <!-- Шпионские шрифты -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Ubuntu+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="img/шляпа.png">
     <link rel="apple-touch-icon" sizes="180x180" href="img/шляпа.png">
-    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
-
+        
         body {
-            font-family: 'Ubuntu Mono', monospace;
-            min-height: 100vh;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            color: white;
-            text-align: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            height: 100vh;
+            width: 100vw;
             overflow: hidden;
-            touch-action: pan-y;
+            position: relative;
+            -webkit-tap-highlight-color: transparent;
+            background-color: #000000;
         }
-
-        /* Фон с размытием */
+        
         .background {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: url('img/fon2.png');
+            background-image: url('img/fon.png');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            z-index: -2;
-            background-color: #2c3e50;
+            filter: blur(4px);
+            transform: scale(1.05);
+            z-index: 1;
         }
-
-        /* Слой для размытия */
-        .blur-overlay {
+        
+        /* Основной контейнер игры */
+        .game-container {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.05);
-            backdrop-filter: blur(2px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            padding: 20px;
+            pointer-events: none;
+        }
+        
+        /* Блок с именем и смайликом текущего игрока */
+        .player-info {
+            width: 280px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
-            z-index: -1;
-        }
-
-        /* КОНТЕЙНЕР ДЛЯ КОЛОДЫ КАРТ И ТЕКСТА */
-        .cards-container {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 1;
-            gap: 30px;
-        }
-
-        /* БЛЮРНЫЙ БЛОК */
-        .blur-block {
-            width: 320px;
-            padding: 25px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-        }
-
-        /* ТЕКСТ ИМЕНИ ИГРОКА */
-        .blur-text {
-            font-family: 'Russo One', sans-serif;
-            font-size: 2.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            text-align: center;
             color: white;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-            letter-spacing: 1px;
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            pointer-events: none;
+            text-shadow: 0 2px 10px rgba(255, 255, 255, 0.5);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            width: 100%;
+            gap: 8px;
         }
 
-        /* КОНТЕЙНЕР ДЛЯ СТОПКИ КАРТ */
-        .card-stack {
-            position: relative;
-            width: 220px;
-            height: 330px;
+        .player-emoji {
+            font-size: 28px;
         }
 
-        /* КАРТА */
+        .player-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        /* Квадратная карта с закругленными углами */
         .card {
+            width: 100%;
+            max-width: 280px;
+            aspect-ratio: 1/1;
+            cursor: pointer;
+            pointer-events: auto;
+            transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+            transform-style: preserve-3d;
+            position: relative;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+        }
+        
+        .card.dragging {
+            transition: none;
+        }
+        
+        /* Анимации свайпа в разных направлениях */
+        .card.swipe-up {
+            animation: swipeUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        
+        .card.swipe-down {
+            animation: swipeDown 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        
+        .card.swipe-left {
+            animation: swipeLeft 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        
+        .card.swipe-right {
+            animation: swipeRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        
+        .card.swipe-up-left {
+            animation: swipeUpLeft 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        
+        .card.swipe-up-right {
+            animation: swipeUpRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        
+        .card.swipe-down-left {
+            animation: swipeDownLeft 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        
+        .card.swipe-down-right {
+            animation: swipeDownRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        
+        @keyframes swipeUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-300px) scale(0); opacity: 0; }
+        }
+        
+        @keyframes swipeDown {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(300px) scale(0); opacity: 0; }
+        }
+        
+        @keyframes swipeLeft {
+            0% { transform: translateX(0) scale(1); opacity: 1; }
+            100% { transform: translateX(-300px) scale(0); opacity: 0; }
+        }
+        
+        @keyframes swipeRight {
+            0% { transform: translateX(0) scale(1); opacity: 1; }
+            100% { transform: translateX(300px) scale(0); opacity: 0; }
+        }
+        
+        @keyframes swipeUpLeft {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(-300px, -300px) scale(0); opacity: 0; }
+        }
+        
+        @keyframes swipeUpRight {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(300px, -300px) scale(0); opacity: 0; }
+        }
+        
+        @keyframes swipeDownLeft {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(-300px, 300px) scale(0); opacity: 0; }
+        }
+        
+        @keyframes swipeDownRight {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(300px, 300px) scale(0); opacity: 0; }
+        }
+        
+        @keyframes appear {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .card-front, .card-back {
             position: absolute;
             width: 100%;
             height: 100%;
-            cursor: pointer;
-            user-select: none;
-            border-radius: 16px;
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            transform-style: preserve-3d;
+            top: 0;
+            left: 0;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
-
-        /* ПЕРЕВЕРНУТАЯ КАРТА */
+        
+        .card-front {
+            transform: rotateY(0deg);
+            background: transparent;
+        }
+        
+        .card-front img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            border-radius: 20px;
+            -webkit-user-drag: none;
+        }
+        
+        /* Оборот карты - старый пожелтевший документ */
+        .card-back {
+            transform: rotateY(180deg);
+            background: #f5e6d3;
+            border: 3px solid #d4b99b;
+            background-image: 
+                repeating-linear-gradient(45deg, rgba(0,0,0,0.02) 0px, rgba(0,0,0,0.02) 10px, rgba(0,0,0,0.03) 10px, rgba(0,0,0,0.03) 20px),
+                linear-gradient(145deg, #f5e6d3, #e5d6c3);
+            color: #5d4a36;
+            font-size: 28px;
+            font-weight: bold;
+            text-align: center;
+            word-break: break-word;
+            padding: 20px;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .card-back .spy-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        
+        .card-back .location-text {
+            font-size: 24px;
+            max-width: 100%;
+            font-family: 'Courier New', monospace;
+            text-shadow: 1px 1px 0 rgba(255,255,255,0.5);
+        }
+        
         .card.flipped {
             transform: rotateY(180deg);
         }
-
-        /* БЫСТРАЯ АНИМАЦИЯ ПЕРЕВОРОТА */
-        @keyframes flipCard {
-            0% {
-                transform: perspective(1000px) rotateY(0deg);
-            }
-            50% {
-                transform: perspective(1000px) rotateY(90deg) scale(1.02);
-            }
-            100% {
-                transform: perspective(1000px) rotateY(180deg);
-            }
+        
+        /* Подсказка для свайпа */
+        .swipe-hint {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+            margin-top: 10px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            padding: 8px 16px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            pointer-events: none;
+            transition: opacity 0.3s;
         }
-
-        @keyframes unflipCard {
-            0% {
-                transform: perspective(1000px) rotateY(180deg);
-            }
-            50% {
-                transform: perspective(1000px) rotateY(90deg) scale(1.02);
-            }
-            100% {
-                transform: perspective(1000px) rotateY(0deg);
-            }
-        }
-
-        .card.flip-animation {
-            animation: flipCard 0.4s forwards;
-        }
-
-        .card.unflip-animation {
-            animation: unflipCard 0.4s forwards;
-        }
-
-        /* УДАЛЕННАЯ КАРТА */
-        .card.removed {
+        
+        .swipe-hint.hidden {
             opacity: 0;
-            transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.3s;
         }
-
-        /* СТОРОНЫ КАРТЫ */
-        .card-side {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 16px;
-            backface-visibility: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
-
-        /* ЛИЦЕВАЯ СТОРОНА */
-        .card-front {
-            background-image: url('img/card2.png');
-            background-size: cover;
-            background-position: center;
-            border: 4px solid wheat;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            background-color: #8b4513;
-        }
-
-        /* ОБОРОТНАЯ СТОРОНА - ПРОСТОЙ ГРАДИЕНТ */
-        .card-back {
-            background: linear-gradient(135deg, #8B7355 0%, #D2B48C 100%);
-            border: 4px solid wheat;
-            box-shadow: 
-                0 5px 15px rgba(0, 0, 0, 0.3),
-                inset 0 0 20px rgba(255, 255, 255, 0.15);
-            transform: rotateY(180deg);
-            padding: 15px;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* ТЕКСТУРА ФОНА */
-        .card-back::before {
-            content: '';
-            position: absolute;
+        
+        /* Блок правил после просмотра всех карт */
+        .rules-block {
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: 
-                radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.08) 1px, transparent 2px),
-                radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.06) 1px, transparent 2px);
-            background-size: 70px 70px, 50px 50px;
-            opacity: 0.5;
-            z-index: 1;
-        }
-
-        /* ИСПРАВЛЕННЫЙ АДАПТИВНЫЙ ТЕКСТ ЛОКАЦИИ - МОЖЕТ БЫТЬ МНОГОСТРОЧНЫМ */
-        .location-text {
-            font-family: 'Russo One', sans-serif;
-            color: #3E2723;
-            text-align: center;
-            margin: 0;
-            padding: 0;
-            position: relative;
-            z-index: 2;
-            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.7);
-            white-space: normal;
-            max-width: 100%;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            font-size: 2.2rem;
-            line-height: 1.1;
-            word-wrap: break-word;
-            word-break: break-word;
-        }
-
-        /* ТЕКСТ ШПИОНА - АДАПТИВНЫЙ К РАЗМЕРУ КАРТЫ */
-        .spy-text {
-            font-family: 'Russo One', sans-serif;
-            color: #8B0000;
-            font-weight: bold;
-            text-transform: uppercase;
-            text-shadow: 
-                2px 2px 4px rgba(139, 0, 0, 0.3),
-                1px 1px 3px rgba(255, 255, 255, 0.7);
-            line-height: 1;
-            text-align: center;
-            margin: 0;
-            padding: 10px 15px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            border: 2px solid rgba(139, 0, 0, 0.2);
-            position: relative;
-            z-index: 2;
-            overflow: hidden;
-            white-space: nowrap;
-            font-size: 3.0rem;
-            letter-spacing: 2px;
-            max-width: 90%;
-        }
-
-        .spy-text::before {
-            content: '';
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.3) 50%, transparent 70%);
-            z-index: 1;
-            animation: shine 3s infinite linear;
-        }
-
-        @keyframes shine {
-            0% {
-                transform: translateX(-100%);
-            }
-            100% {
-                transform: translateX(100%);
-            }
-        }
-
-        /* ПРАВИЛА РАУНДА - ИСПРАВЛЕНО ЦЕНТРИРОВАНИЕ */
-        .round-rules {
-            display: none;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 100;
+            display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 15px;
+            padding: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+        
+        .rules-block.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .rules-content {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 30px;
+            padding: 30px;
+            max-width: 500px;
             width: 100%;
+            color: white;
             text-align: center;
-            animation: fadeIn 0.5s ease forwards;
         }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .round-rules.show {
-            display: flex;
-        }
-
+        
         .rules-title {
-            font-family: 'Russo One', sans-serif;
-            font-size: 1.6rem;
-            color: #FFD700;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
-            margin-bottom: 5px;
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(255,255,255,0.3);
         }
-
-        .rules-list {
-            text-align: left;
-            font-size: 1rem;
-            line-height: 1.4;
-            color: rgba(255, 255, 255, 0.9);
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
-            list-style-type: none;
-            padding: 0 5px;
-            margin: 0 auto;
-            max-width: 280px;
+        
+        .rules-text {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            color: rgba(255,255,255,0.9);
         }
-
-        .rules-list li {
-            margin-bottom: 8px;
-            padding-left: 15px;
-            position: relative;
-        }
-
-        .rules-list li:before {
-            content: '•';
-            color: #FFD700;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
-            font-size: 1.2rem;
-            position: absolute;
-            left: 0;
-            top: -1px;
-        }
-
-        .rules-ready-text {
-            font-size: 1rem;
-            color: #FFD700;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
-            margin: 5px 0;
-            text-align: center;
-        }
-
-        /* КНОПКА СТАРТ - БЕЛАЯ */
-        .start-button {
-            font-family: 'Russo One', sans-serif;
-            font-size: 1.6rem;
-            color: #333;
+        
+        .start-btn {
             background: white;
             border: none;
-            border-radius: 10px;
-            padding: 12px 35px;
-            margin-top: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            border-radius: 15px;
+            padding: 16px 40px;
+            font-size: 20px;
             font-weight: bold;
+            color: black;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 5px 20px rgba(255,255,255,0.2);
         }
-
-        .start-button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 6px 20px rgba(255, 255, 255, 0.4);
-            background: #f5f5f5;
+        
+        .start-btn:active {
+            transform: scale(0.95);
+            background: #f0f0f0;
         }
-
-        .start-button:active {
-            transform: scale(0.98);
+        
+        /* Экран таймера */
+        .timer-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+            color: white;
         }
-
-        /* АНИМАЦИЯ ДЛЯ ИМЕНИ ИГРОКА */
-        @keyframes playerChange {
-            0% {
-                transform: scale(1);
-                opacity: 1;
-            }
-            50% {
-                transform: scale(1.1);
-                opacity: 0.8;
-            }
-            100% {
-                transform: scale(1);
-                opacity: 1;
-            }
+        
+        .timer-screen.active {
+            opacity: 1;
+            pointer-events: auto;
         }
-
-        .player-changing {
-            animation: playerChange 0.3s ease;
+        
+        .timer-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            max-width: 500px;
+            width: 100%;
+            margin: 0 auto;
         }
-
-        /* АДАПТИВНОСТЬ */
-        @media (max-width: 992px) {
-            .cards-container {
-                gap: 25px;
-            }
-            
-            .blur-block {
-                width: 300px;
-                padding: 20px;
-            }
-            
-            .blur-text {
-                font-size: 2.2rem;
-            }
-            
-            .card-stack {
-                width: 220px;
-                height: 330px;
-            }
-            
-            .location-text {
-                font-size: 2.0rem;
-            }
-            
-            .spy-text {
-                font-size: 2.6rem;
-                padding: 8px 12px;
-                letter-spacing: 1.5px;
-            }
-            
-            .rules-title {
-                font-size: 1.5rem;
-            }
-            
-            .rules-list {
-                font-size: 0.95rem;
-                max-width: 260px;
-            }
-            
-            .start-button {
-                font-size: 1.5rem;
-                padding: 10px 30px;
-            }
+        
+        .progress-bar-container {
+            width: 100%;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            position: relative;
         }
-
-        @media (max-width: 576px) {
-            .cards-container {
-                gap: 25px;
-            }
-            
-            .blur-block {
-                width: 320px;
-                padding: 20px;
-            }
-            
-            .blur-text {
-                font-size: 2.5rem;
-            }
-            
-            .card-stack {
-                width: 300px;
-                height: 450px;
-            }
-            
-            .location-text {
-                font-size: 2.4rem;
-            }
-            
-            .spy-text {
-                font-size: 3.2rem;
-                padding: 12px 18px;
-                letter-spacing: 2px;
-            }
-            
-            .rules-title {
-                font-size: 1.6rem;
-            }
-            
-            .rules-list {
-                font-size: 1rem;
-                max-width: 280px;
-            }
-            
-            .start-button {
-                font-size: 1.6rem;
-                padding: 12px 35px;
-            }
+        
+        .progress-bar {
+            height: 100%;
+            background: white;
+            border-radius: 15px;
+            transition: width 1s linear;
+            width: 100%;
         }
-
-        @media (max-width: 400px) {
-            .cards-container {
-                gap: 20px;
+        
+        .timer-display {
+            text-align: center;
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: white;
+            text-shadow: 0 0 20px rgba(255,255,255,0.5);
+        }
+        
+        .pause-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 30px;
+            padding: 15px 30px;
+            font-size: 18px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            transition: all 0.2s;
+            width: 200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .pause-btn:active {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(0.95);
+        }
+        
+        .players-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .player-item {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .player-item:active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .player-emoji-small {
+            font-size: 24px;
+            min-width: 40px;
+            text-align: center;
+        }
+        
+        .player-name-small {
+            flex: 1;
+            font-size: 16px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        /* Модальное окно игрока */
+        .player-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 300;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            padding: 20px;
+        }
+        
+        .player-modal.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .modal-card {
+            width: 200px;
+            aspect-ratio: 1/1;
+            position: relative;
+            margin-bottom: 20px;
+            cursor: default;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+        }
+        
+        .modal-card.flipped {
+            transform: rotateY(180deg);
+        }
+        
+        .modal-card .card-front,
+        .modal-card .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-card .card-front {
+            transform: rotateY(0deg);
+        }
+        
+        .modal-card .card-front img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 20px;
+        }
+        
+        .modal-card .card-back {
+            transform: rotateY(180deg);
+            background: #f5e6d3;
+            border: 3px solid #d4b99b;
+            background-image: 
+                repeating-linear-gradient(45deg, rgba(0,0,0,0.02) 0px, rgba(0,0,0,0.02) 10px, rgba(0,0,0,0.03) 10px, rgba(0,0,0,0.03) 20px),
+                linear-gradient(145deg, #f5e6d3, #e5d6c3);
+            color: #5d4a36;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            flex-direction: column;
+            gap: 10px;
+            padding: 20px;
+        }
+        
+        .eliminate-btn {
+            background: white;
+            border: none;
+            border-radius: 15px;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            color: black;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 10px;
+            box-shadow: 0 5px 20px rgba(255,255,255,0.2);
+        }
+        
+        .eliminate-btn:active {
+            transform: scale(0.95);
+            background: #f0f0f0;
+        }
+        
+        .eliminate-btn.hidden {
+            display: none;
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Экран окончания раунда */
+        .end-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 400;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+            color: white;
+        }
+        
+        .end-screen.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .end-content {
+            max-width: 500px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 30px;
+            padding: 30px;
+        }
+        
+        .end-title {
+            font-size: 32px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 30px;
+            white-space: nowrap;
+            text-shadow: 0 0 20px rgba(255,255,255,0.3);
+        }
+        
+        .teams-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .team-block {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 15px;
+        }
+        
+        .team-title {
+            font-size: 20px;
+            margin-bottom: 10px;
+            text-align: center;
+            color: rgba(255,255,255,0.9);
+        }
+        
+        .team-players {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .team-player {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+        
+        .player-info-end {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .player-status {
+            font-size: 16px;
+        }
+        
+        .status-heart {
+            color: #ff6b6b;
+        }
+        
+        .status-skull {
+            color: #a4a4a4;
+        }
+        
+        .new-game-btn {
+            background: white;
+            border: none;
+            border-radius: 15px;
+            padding: 16px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            color: black;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+            display: block;
+        }
+        
+        .new-game-btn:active {
+            transform: scale(0.95);
+        }
+        
+        @media (max-width: 480px) {
+            .card {
+                max-width: 240px;
             }
             
-            .blur-block {
-                width: 280px;
-                padding: 18px;
+            .player-info {
+                width: 240px;
+                font-size: 18px;
             }
             
-            .blur-text {
-                font-size: 2.2rem;
+            .card-back {
+                font-size: 24px;
             }
             
-            .card-stack {
-                width: 280px;
-                height: 420px;
+            .card-back .spy-icon {
+                font-size: 40px;
             }
             
-            .location-text {
-                font-size: 2.0rem;
+            .card-back .location-text {
+                font-size: 18px;
             }
             
-            .spy-text {
-                font-size: 2.8rem;
-                padding: 8px 14px;
-                letter-spacing: 1.5px;
+            .timer-display {
+                font-size: 36px;
             }
             
-            .rules-title {
-                font-size: 1.5rem;
+            .end-title {
+                font-size: 28px;
             }
             
-            .rules-list {
-                font-size: 0.95rem;
-                max-width: 250px;
-            }
-            
-            .start-button {
-                font-size: 1.5rem;
-                padding: 10px 30px;
+            .team-title {
+                font-size: 18px;
             }
         }
     </style>
 </head>
-<body>
-    
-<div class="background"></div>
-<div class="blur-overlay"></div>
+<body oncontextmenu="return false;" onselectstart="return false;" ondragstart="return false;">
 
-<div class="cards-container">
-    <!-- БЛЮРНЫЙ БЛОК С ИМЕНЕМ ИГРОКА -->
-    <div class="blur-block">
-        <div class="blur-text" id="currentPlayerName">
-            <span id="playerEmoji"></span>
-            <span id="playerName">Загрузка...</span>
+    <div class="background"></div>
+    
+    <!-- Основной экран игры -->
+    <div class="game-container">
+        <!-- Блок с именем и смайликом текущего игрока -->
+        <div class="player-info" id="playerInfo">
+            <span class="player-emoji" id="playerEmoji">😀</span>
+            <span class="player-name" id="playerName">Игрок</span>
         </div>
         
-        <!-- Правила раунда (скрыто изначально) -->
-        <div class="round-rules" id="roundRules">
-            <div class="rules-title">Правила раунда</div>
-            <ul class="rules-list">
-                <li>Каждый игрок задает вопрос любому другому игроку, связанный с локацией</li>
-                <li>Нельзя задавать вопрос тому, кто только что задал вопрос вам</li>
-                <li>Шпионы не знают локацию и пытаются ее узнать</li>
-                <li>Задавайте вопросы, которые не выдадут вас, если вы шпион</li>
-                <li>Если вы мирный - выбирайте вопросы осторожно, чтобы не выдать локацию шпиону</li>
-            </ul>
-            <div class="rules-ready-text">
-                Как будете готовы нажмите кнопку "Старт"
+        <!-- Карта -->
+        <div class="card" id="gameCard">
+            <div class="card-front">
+                <img src="img/card.png" alt="card" draggable="false">
             </div>
-            <button class="start-button" id="startButton">
-                СТАРТ
-            </button>
+            <div class="card-back" id="cardBack">
+                <div class="spy-icon"></div>
+                <div class="location-text"></div>
+            </div>
+        </div>
+        
+        <!-- Подсказка для свайпа -->
+        <div class="swipe-hint" id="swipeHint">👆 Переверни карту, затем свайпни</div>
+    </div>
+    
+    <!-- Блок правил после просмотра всех карт -->
+    <div class="rules-block" id="rulesBlock">
+        <div class="rules-content">
+            <h2 class="rules-title">Правила раунда</h2>
+            <div class="rules-text">
+                Каждый игрок задает вопрос любому другому игроку, связанный с локацией<br><br>
+                Нельзя задавать вопрос тому, кто только что задал вопрос вам<br><br>
+                Шпионы не знают локацию и пытаются ее узнать<br><br>
+                Задавайте вопросы, которые не выдадут вас, если вы шпион<br><br>
+                Если вы мирный - выбирайте вопросы осторожно, чтобы не выдать локацию шпиону
+            </div>
+            <button class="start-btn" id="startGameBtn">Старт</button>
         </div>
     </div>
     
-    <!-- КОЛОДА КАРТ -->
-    <div class="card-stack" id="cardStack">
-        <!-- Карты будут созданы динамически -->
-    </div>
-</div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const cardStack = document.getElementById('cardStack');
-        const playerName = document.getElementById('playerName');
-        const playerEmoji = document.getElementById('playerEmoji');
-        const blurBlock = document.querySelector('.blur-block');
-        const roundRules = document.getElementById('roundRules');
-        const startButton = document.getElementById('startButton');
-        const blurText = document.querySelector('.blur-text');
-        
-        // Константы
-        const SWIPE_THRESHOLD = 50;
-        const CARD_STACK_OFFSET = 3;
-        const MIN_SWIPE_VELOCITY = 0.5;
-        
-        // Переменные игры
-        let gameSettings = null;
-        let players = [];
-        let currentPlayerIndex = 0;
-        let cards = [];
-        let allLocations = [];
-        
-        // Переменные для свайпа
-        let startX = 0, startY = 0, currentX = 0, currentY = 0;
-        let startTime = 0;
-        let isSwiping = false, currentCard = null;
-        let isAnimating = false;
-        
-        // Загрузка настроек игры
-        function loadGameSettings() {
-            try {
-                const savedSettings = localStorage.getItem('spyGameSettings');
-                if (savedSettings) {
-                    gameSettings = JSON.parse(savedSettings);
-                    players = gameSettings.players || [];
-                    
-                    if (players.length < 3) {
-                        alert('Недостаточно игроков! Вернитесь в настройки и добавьте минимум 3 игрока.');
-                        return false;
-                    }
-                    
-                    loadSelectedLocations();
-                    return true;
-                } else {
-                    alert('Настройки игры не найдены! Вернитесь на страницу настроек.');
-                    return false;
-                }
-            } catch (error) {
-                console.error('Ошибка загрузки настроек:', error);
-                alert('Ошибка загрузки настроек игры!');
-                return false;
-            }
-        }
-        
-        // Загрузка локаций из выбранных наборов
-        function loadSelectedLocations() {
-            allLocations = [];
+    <!-- Экран таймера -->
+    <div class="timer-screen" id="timerScreen">
+        <div class="timer-container">
+            <div class="timer-display" id="timerDisplay">5:00</div>
             
-            if (gameSettings.locationsData && Array.isArray(gameSettings.locationsData)) {
-                gameSettings.locationsData.forEach(locationSet => {
-                    if (locationSet.locations && Array.isArray(locationSet.locations)) {
-                        allLocations = allLocations.concat(locationSet.locations);
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            
+            <button class="pause-btn" id="pauseBtn">
+                <i class="fas fa-pause"></i> Пауза
+            </button>
+            
+            <div class="players-list" id="playersList"></div>
+        </div>
+    </div>
+    
+    <!-- Модальное окно игрока -->
+    <div class="player-modal" id="playerModal">
+        <button class="modal-close" id="modalCloseBtn">&times;</button>
+        <div style="display: flex; flex-direction: column; align-items: center;">
+            <div class="modal-card" id="modalCard">
+                <div class="card-front">
+                    <img src="img/card.png" alt="card" draggable="false">
+                </div>
+                <div class="card-back">
+                    <div class="spy-icon" id="modalSpyIcon"></div>
+                    <div class="location-text" id="modalLocationText"></div>
+                </div>
+            </div>
+            <button class="eliminate-btn" id="eliminateBtn">Исключить</button>
+        </div>
+    </div>
+    
+    <!-- Экран окончания раунда -->
+    <div class="end-screen" id="endScreen">
+        <div class="end-content">
+            <h1 class="end-title" id="endTitle">Победили Мирные</h1>
+            
+            <div class="teams-container" id="teamsContainer"></div>
+            
+            <button class="new-game-btn" id="newGameBtn">Новая игра</button>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // Загружаем настройки игры из localStorage
+            function loadGameSettings() {
+                const defaultSettings = {
+                    players: [
+                        { name: 'Игрок 1', emoji: '😀' },
+                        { name: 'Игрок 2', emoji: '😎' },
+                        { name: 'Игрок 3', emoji: '🤠' },
+                        { name: 'Игрок 4', emoji: '🧐' }
+                    ],
+                    spyCount: 1,
+                    locations: ['Ресторан', 'Школа', 'Больница', 'Театр'],
+                    selectedMinutes: 5
+                };
+
+                try {
+                    const saved = localStorage.getItem('spyGameSettings');
+                    console.log('Загруженные настройки из localStorage:', saved);
+                    
+                    if (saved) {
+                        const parsed = JSON.parse(saved);
+                        console.log('Распарсенные настройки:', parsed);
+                        
+                        // Проверяем наличие времени в разных форматах
+                        if (parsed.selectedMinutes !== undefined) {
+                            console.log('Найдено время в настройках (selectedMinutes):', parsed.selectedMinutes, 'минут');
+                            return parsed;
+                        }
+                        
+                        // Проверяем альтернативные поля
+                        if (parsed.timer !== undefined) {
+                            console.log('Найдено время в поле timer:', parsed.timer, 'минут');
+                            parsed.selectedMinutes = parsed.timer;
+                            return parsed;
+                        }
+                        
+                        if (parsed.time !== undefined) {
+                            console.log('Найдено время в поле time:', parsed.time, 'минут');
+                            parsed.selectedMinutes = parsed.time;
+                            return parsed;
+                        }
+                        
+                        return parsed;
                     }
+                } catch (e) {
+                    console.error('Ошибка чтения настроек игры', e);
+                }
+                
+                console.log('Используются настройки по умолчанию:', defaultSettings);
+                return defaultSettings;
+            }
+
+            // Загружаем настройки
+            const settings = loadGameSettings();
+            console.log('Итоговые настройки игры:', settings);
+
+            // Данные игры
+            const players = settings.players || [];
+            const spyCount = Math.min(settings.spyCount || 1, players.length - 1);
+            const locations = settings.locations || ['Локация'];
+            
+            // Время из настроек (будет использоваться для инициализации таймера)
+            let timerMinutes = settings.selectedMinutes || 5;
+            console.log('Время таймера из настроек:', timerMinutes, 'минут');
+
+            // Проверка минимального количества игроков
+            if (players.length < 3) {
+                alert('Нужно минимум 3 игрока для игры');
+                window.location.href = 'setting-game.html';
+                return;
+            }
+
+            // Генерация шпионов (случайным образом)
+            const spyIndices = new Set();
+            while (spyIndices.size < spyCount) {
+                const randomIndex = Math.floor(Math.random() * players.length);
+                spyIndices.add(randomIndex);
+            }
+
+            // Выбор случайной локации для мирных
+            const commonLocation = locations[Math.floor(Math.random() * locations.length)];
+
+            // Массив ролей: true — шпион, false — мирный
+            const roles = players.map((_, idx) => spyIndices.has(idx));
+
+            // Состояния игроков (жив/мертв)
+            const alive = new Array(players.length).fill(true);
+
+            // Массив состояний карт (была ли перевёрнута)
+            const cardFlipped = new Array(players.length).fill(false);
+
+            console.log('Роли:', roles);
+            console.log('Общая локация:', commonLocation);
+            console.log('Шпионы:', Array.from(spyIndices).map(i => players[i].name));
+
+            // Текущий индекс игрока
+            let currentPlayerIndex = 0;
+
+            // Состояния
+            let isFlipped = false;
+            let isAnimating = false;
+            let canSwipe = false;
+            let touchStartX = 0;
+            let touchStartY = 0;
+            let isSwiping = false;
+            let clickPrevented = false;
+            
+            // Таймер
+            let timerInterval = null;
+            let timeLeft = timerMinutes * 60; // в секундах
+            let isPaused = false;
+            let timerActive = false;
+            let autoCloseTimeout = null;
+
+            // DOM элементы
+            const card = document.getElementById('gameCard');
+            const cardBack = document.getElementById('cardBack');
+            const playerEmoji = document.getElementById('playerEmoji');
+            const playerName = document.getElementById('playerName');
+            const swipeHint = document.getElementById('swipeHint');
+            const spyIcon = cardBack.querySelector('.spy-icon');
+            const locationText = cardBack.querySelector('.location-text');
+            
+            // Экран правил
+            const rulesBlock = document.getElementById('rulesBlock');
+            
+            // Экран таймера
+            const timerScreen = document.getElementById('timerScreen');
+            const timerDisplay = document.getElementById('timerDisplay');
+            const progressBar = document.getElementById('progressBar');
+            const pauseBtn = document.getElementById('pauseBtn');
+            const playersList = document.getElementById('playersList');
+            
+            // Модальное окно
+            const playerModal = document.getElementById('playerModal');
+            const modalCard = document.getElementById('modalCard');
+            const modalSpyIcon = document.getElementById('modalSpyIcon');
+            const modalLocationText = document.getElementById('modalLocationText');
+            const eliminateBtn = document.getElementById('eliminateBtn');
+            const modalCloseBtn = document.getElementById('modalCloseBtn');
+            
+            // Экран окончания
+            const endScreen = document.getElementById('endScreen');
+            const endTitle = document.getElementById('endTitle');
+            const teamsContainer = document.getElementById('teamsContainer');
+            const newGameBtn = document.getElementById('newGameBtn');
+
+            // Переменная для хранения текущего выбранного игрока в модалке
+            let selectedPlayerIndex = -1;
+
+            // Обновление UI под текущего игрока
+            function updateCurrentPlayer() {
+                const player = players[currentPlayerIndex];
+                playerEmoji.textContent = player.emoji || '😶';
+                playerName.textContent = player.name || 'Игрок';
+
+                // Обновляем текст на обороте карты
+                if (roles[currentPlayerIndex]) {
+                    // Шпион
+                    spyIcon.textContent = '🕵️';
+                    locationText.textContent = 'Ты шпион';
+                } else {
+                    // Мирный
+                    spyIcon.textContent = '';
+                    locationText.textContent = commonLocation;
+                }
+
+                // Восстанавливаем состояние переворота для текущего игрока
+                if (cardFlipped[currentPlayerIndex]) {
+                    card.classList.add('flipped');
+                    isFlipped = true;
+                    canSwipe = true;
+                    swipeHint.classList.add('hidden');
+                } else {
+                    card.classList.remove('flipped');
+                    isFlipped = false;
+                    canSwipe = false;
+                    swipeHint.classList.remove('hidden');
+                }
+
+                // Сбрасываем позицию и анимации
+                card.style.transform = '';
+                card.style.opacity = '1';
+                card.classList.remove('dragging');
+            }
+
+            // Определение направления свайпа
+            function getSwipeDirection(diffX, diffY) {
+                const angle = Math.atan2(diffY, diffX) * 180 / Math.PI;
+                
+                if (angle > -22.5 && angle <= 22.5) return 'right';
+                if (angle > 22.5 && angle <= 67.5) return 'down-right';
+                if (angle > 67.5 && angle <= 112.5) return 'down';
+                if (angle > 112.5 && angle <= 157.5) return 'down-left';
+                if (angle > 157.5 || angle <= -157.5) return 'left';
+                if (angle > -157.5 && angle <= -112.5) return 'up-left';
+                if (angle > -112.5 && angle <= -67.5) return 'up';
+                if (angle > -67.5 && angle <= -22.5) return 'up-right';
+                
+                return 'right';
+            }
+
+            // Переключение на следующего игрока
+            function nextPlayer() {
+                if (isAnimating) return;
+                
+                // Проверяем, все ли карты перевёрнуты
+                const allFlipped = cardFlipped.every(v => v);
+                if (allFlipped) {
+                    // Показываем блок с правилами
+                    setTimeout(() => {
+                        rulesBlock.classList.add('active');
+                    }, 300);
+                    return;
+                }
+
+                isAnimating = true;
+
+                // Ищем следующего живого игрока, который ещё не смотрел карту
+                let nextIndex = currentPlayerIndex;
+                do {
+                    nextIndex = (nextIndex + 1) % players.length;
+                } while ((!alive[nextIndex] || cardFlipped[nextIndex]) && nextIndex !== currentPlayerIndex);
+                
+                currentPlayerIndex = nextIndex;
+
+                // Анимация появления
+                card.style.animation = 'appear 0.3s ease';
+                setTimeout(() => {
+                    card.style.animation = '';
+                }, 300);
+
+                // Обновляем данные
+                updateCurrentPlayer();
+
+                isAnimating = false;
+            }
+
+            // Переворот карты (можно неограниченно)
+            function toggleFlip() {
+                if (isAnimating) return;
+                
+                card.classList.toggle('flipped');
+                isFlipped = card.classList.contains('flipped');
+                
+                if (isFlipped && !cardFlipped[currentPlayerIndex]) {
+                    cardFlipped[currentPlayerIndex] = true;
+                    canSwipe = true;
+                    swipeHint.classList.add('hidden');
+                }
+            }
+
+            // Форматирование времени
+            function formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+            }
+
+            // Обновление таймера
+            function updateTimer() {
+                if (!timerActive || isPaused) return;
+                
+                timeLeft--;
+                timerDisplay.textContent = formatTime(timeLeft);
+                
+                const percent = (timeLeft / (timerMinutes * 60)) * 100;
+                progressBar.style.width = `${percent}%`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timerActive = false;
+                }
+            }
+
+            // Запуск таймера
+            function startTimer() {
+                if (timerActive) return;
+                
+                timerActive = true;
+                isPaused = false;
+                pauseBtn.innerHTML = '<i class="fas fa-pause"></i> Пауза';
+                
+                timerInterval = setInterval(updateTimer, 1000);
+            }
+
+            // Пауза/продолжение таймера
+            function togglePause() {
+                if (!timerActive) return;
+                
+                isPaused = !isPaused;
+                if (isPaused) {
+                    pauseBtn.innerHTML = '<i class="fas fa-play"></i> Продолжить';
+                } else {
+                    pauseBtn.innerHTML = '<i class="fas fa-pause"></i> Пауза';
+                }
+            }
+
+            // Обновление списка игроков в таймере
+            function updatePlayersList() {
+                playersList.innerHTML = '';
+                
+                players.forEach((player, index) => {
+                    if (!alive[index]) return; // Показываем только живых
+                    
+                    const playerItem = document.createElement('div');
+                    playerItem.className = 'player-item';
+                    playerItem.dataset.index = index;
+                    
+                    playerItem.innerHTML = `
+                        <span class="player-emoji-small">${player.emoji || '😶'}</span>
+                        <span class="player-name-small">${player.name}</span>
+                    `;
+                    
+                    playerItem.addEventListener('click', () => openPlayerModal(index));
+                    
+                    playersList.appendChild(playerItem);
                 });
             }
-        }
-        
-        // Получение случайной локации
-        function getRandomLocation() {
-            if (allLocations.length === 0) {
-                return "Выберите локации в настройках";
-            }
-            
-            const randomIndex = Math.floor(Math.random() * allLocations.length);
-            return allLocations[randomIndex];
-        }
-        
-        // Определение ролей игроков
-        function assignRoles() {
-            const totalPlayers = players.length;
-            const spyCount = parseInt(gameSettings.spies) || 1;
-            
-            if (spyCount < 1) {
-                alert('Количество шпионов должно быть не менее 1!');
-                return false;
-            }
-            
-            if (spyCount >= totalPlayers) {
-                alert('Количество шпионов должно быть меньше количества игроков!');
-                return false;
-            }
-            
-            let roles = [];
-            
-            for (let i = 0; i < spyCount; i++) {
-                roles.push('Шпион');
-            }
-            
-            for (let i = spyCount; i < totalPlayers; i++) {
-                roles.push('Мирный житель');
-            }
-            
-            // Перемешиваем роли
-            for (let i = roles.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [roles[i], roles[j]] = [roles[j], roles[i]];
-            }
-            
-            const gameLocation = getRandomLocation();
-            
-            players.forEach((player, index) => {
-                player.role = roles[index];
-                player.isSpy = player.role === 'Шпион';
-                player.location = player.isSpy ? null : gameLocation;
-            });
-            
-            gameSettings.gameLocation = gameLocation;
-            return true;
-        }
-        
-        // Функция для адаптации размера текста
-        function adjustTextSize(textElement, isSpy = false) {
-            const container = textElement.parentElement;
-            const containerWidth = container.clientWidth - 30;
-            const containerHeight = container.clientHeight - 30;
-            
-            let fontSize = isSpy ? 3.0 : 2.2; // Начальный размер
-            textElement.style.fontSize = fontSize + 'rem';
-            
-            // Для локаций разрешаем перенос строк
-            if (!isSpy) {
-                textElement.style.whiteSpace = 'normal';
-                textElement.style.wordWrap = 'break-word';
-                textElement.style.wordBreak = 'break-word';
-                textElement.style.lineHeight = '1.1';
-            } else {
-                // Для шпиона - одна строка
-                textElement.style.letterSpacing = '2px';
-            }
-            
-            // Проверяем, помещается ли текст
-            let textWidth = textElement.scrollWidth;
-            let textHeight = textElement.scrollHeight;
-            
-            // Минимальный размер шрифта
-            const minFontSize = isSpy ? 1.8 : 1.2;
-            
-            // Уменьшаем размер, пока текст не поместится
-            while ((textWidth > containerWidth || textHeight > containerHeight) && fontSize > minFontSize) {
-                fontSize -= 0.1;
-                textElement.style.fontSize = fontSize + 'rem';
+
+            // Открытие модального окна игрока
+            function openPlayerModal(index) {
+                if (!alive[index]) return; // Нельзя открыть мёртвого игрока
                 
-                // Для шпиона также уменьшаем letter-spacing
-                if (isSpy && fontSize < 2.5) {
-                    textElement.style.letterSpacing = (fontSize * 0.6) + 'px';
-                }
+                selectedPlayerIndex = index;
+                const player = players[index];
                 
-                textWidth = textElement.scrollWidth;
-                textHeight = textElement.scrollHeight;
-            }
-            
-            // Для локаций гарантируем, что текст не выходит за пределы
-            if (!isSpy) {
-                textElement.style.overflow = 'hidden';
-                textElement.style.maxHeight = '100%';
-                textElement.style.maxWidth = '100%';
-            }
-        }
-        
-        // Создание карт для каждого игрока
-        function createPlayerCards() {
-            cardStack.innerHTML = '';
-            cards = [];
-            
-            players.forEach((player, index) => {
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.dataset.playerIndex = index;
-                
-                let cardContent = '';
-                
-                if (player.isSpy) {
-                    // ТОЛЬКО ТЕКСТ, БЕЗ КАРТИНКИ
-                    cardContent = `<div class="spy-text">ШПИОН</div>`;
+                // Настраиваем содержимое карты
+                if (roles[index]) {
+                    modalSpyIcon.textContent = '🕵️';
+                    modalLocationText.textContent = 'Ты шпион';
                 } else {
-                    cardContent = `<div class="location-text">${player.location}</div>`;
+                    modalSpyIcon.textContent = '';
+                    modalLocationText.textContent = commonLocation;
                 }
                 
-                card.innerHTML = `
-                    <div class="card-side card-front"></div>
-                    <div class="card-side card-back">
-                        ${cardContent}
+                modalCard.classList.remove('flipped');
+                eliminateBtn.classList.remove('hidden');
+                playerModal.classList.add('active');
+            }
+
+            // Исключение игрока
+            function eliminatePlayer() {
+                if (selectedPlayerIndex === -1) return;
+                
+                // Переворачиваем карту в модалке
+                modalCard.classList.add('flipped');
+                
+                // Меняем текст на "Мирный житель" для нешпионов
+                if (!roles[selectedPlayerIndex]) {
+                    modalSpyIcon.textContent = '';
+                    modalLocationText.textContent = 'Мирный житель';
+                }
+                
+                // Прячем кнопку "Исключить"
+                eliminateBtn.classList.add('hidden');
+                
+                // Помечаем игрока как мёртвого
+                alive[selectedPlayerIndex] = false;
+                
+                // Обновляем список игроков
+                updatePlayersList();
+                
+                // Если исключен текущий игрок, переключаем на следующего
+                if (selectedPlayerIndex === currentPlayerIndex) {
+                    nextPlayer();
+                }
+                
+                // Проверка условия победы
+                checkWinCondition();
+                
+                // Закрываем модалку через 3 секунды
+                if (autoCloseTimeout) clearTimeout(autoCloseTimeout);
+                autoCloseTimeout = setTimeout(() => {
+                    playerModal.classList.remove('active');
+                }, 3000);
+            }
+
+            // Проверка победы
+            function checkWinCondition() {
+                const aliveSpies = players.filter((_, i) => alive[i] && roles[i]).length;
+                const aliveCivilians = players.filter((_, i) => alive[i] && !roles[i]).length;
+                
+                if (aliveSpies === 0) {
+                    // Победили мирные
+                    showEndScreen('Победили Мирные');
+                } else if (aliveCivilians === 0) {
+                    // Победили шпионы
+                    showEndScreen('Победили Шпионы');
+                }
+            }
+
+            // Показать экран окончания
+            function showEndScreen(winner) {
+                endTitle.textContent = winner;
+                
+                // Формируем списки игроков
+                const civilians = [];
+                const spies = [];
+                
+                players.forEach((player, index) => {
+                    if (roles[index]) {
+                        spies.push({
+                            ...player,
+                            alive: alive[index]
+                        });
+                    } else {
+                        civilians.push({
+                            ...player,
+                            alive: alive[index]
+                        });
+                    }
+                });
+                
+                teamsContainer.innerHTML = `
+                    <div class="team-block">
+                        <h3 class="team-title">Мирные</h3>
+                        <div class="team-players">
+                            ${civilians.map(p => `
+                                <div class="team-player">
+                                    <div class="player-info-end">
+                                        <span>${p.emoji || '😶'}</span>
+                                        <span>${p.name}</span>
+                                    </div>
+                                    <span class="player-status ${p.alive ? 'status-heart' : 'status-skull'}">
+                                        ${p.alive ? '❤️' : '💀'}
+                                    </span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div class="team-block">
+                        <h3 class="team-title">Шпионы</h3>
+                        <div class="team-players">
+                            ${spies.map(p => `
+                                <div class="team-player">
+                                    <div class="player-info-end">
+                                        <span>${p.emoji || '😶'}</span>
+                                        <span>${p.name}</span>
+                                    </div>
+                                    <span class="player-status ${p.alive ? 'status-heart' : 'status-skull'}">
+                                        ${p.alive ? '❤️' : '💀'}
+                                    </span>
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
                 `;
                 
-                cardStack.appendChild(card);
-                cards.push(card);
-                
-                const offset = index * CARD_STACK_OFFSET;
-                card.style.transform = `translateY(${offset}px)`;
-                card.style.zIndex = index + 1;
-                
-                // Подстраиваем размер текста после создания карты
-                setTimeout(() => {
-                    const textElement = card.querySelector(player.isSpy ? '.spy-text' : '.location-text');
-                    if (textElement) {
-                        adjustTextSize(textElement, player.isSpy);
-                    }
-                }, 50);
+                endScreen.classList.add('active');
+            }
+
+            // Обработчики событий карты
+            card.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (clickPrevented || isAnimating) return;
+                toggleFlip();
             });
-            
-            updateCurrentPlayer();
-        }
-        
-        // Обновление отображаемого имени и смайлика игрока
-        function updateCurrentPlayer() {
-            if (players.length > 0 && currentPlayerIndex < players.length) {
-                const currentPlayer = players[currentPlayerIndex];
-                playerName.textContent = currentPlayer.name;
-                playerEmoji.textContent = currentPlayer.emoji || '😀';
+
+            // Touch события для свайпа (любое направление)
+            card.addEventListener('touchstart', function(e) {
+                if (e.touches.length !== 1 || isAnimating) return;
                 
-                blurBlock.classList.add('player-changing');
-                setTimeout(() => {
-                    blurBlock.classList.remove('player-changing');
-                }, 300);
-            }
-        }
-        
-        // Переход к следующему игроку
-        function goToNextPlayer() {
-            currentPlayerIndex++;
-            
-            if (currentPlayerIndex >= players.length) {
-                showRoundRules();
-                return false;
-            }
-            
-            updateCurrentPlayer();
-            return true;
-        }
-        
-        // Показать правила раунда - УПРОЩЕННАЯ ВЕРСИЯ
-        function showRoundRules() {
-            // Плавно скрываем имя игрока
-            blurText.style.opacity = '0';
-            
-            setTimeout(() => {
-                // Скрываем имя игрока
-                blurText.style.display = 'none';
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+                isSwiping = false;
+                clickPrevented = false;
                 
-                // Показываем правила раунда
-                roundRules.classList.add('show');
-            }, 300);
-        }
-        
-        // ФУНКЦИЯ ПЕРЕВОРОТА КАРТЫ (открытие)
-        function flipCardOpen(card) {
-            if (isAnimating || !card || card.classList.contains('removed')) return;
-            
-            isAnimating = true;
-            
-            card.classList.remove('flipped');
-            card.classList.add('flip-animation');
-            
-            setTimeout(() => {
-                card.classList.remove('flip-animation');
-                card.classList.add('flipped');
-                
-                const playerIndex = parseInt(card.dataset.playerIndex);
-                const offset = playerIndex * CARD_STACK_OFFSET;
-                card.style.transform = `translateY(${offset}px) rotateY(180deg)`;
-                card.style.zIndex = 1000;
-                
-                isAnimating = false;
-            }, 400);
-        }
-        
-        // ФУНКЦИЯ ОБРАТНОГО ПЕРЕВОРОТА КАРТЫ (закрытие)
-        function flipCardClose(card) {
-            if (isAnimating || !card || card.classList.contains('removed')) return;
-            
-            isAnimating = true;
-            
-            card.classList.add('unflip-animation');
-            
-            setTimeout(() => {
-                card.classList.remove('unflip-animation');
-                card.classList.remove('flipped');
-                
-                const playerIndex = parseInt(card.dataset.playerIndex);
-                const offset = playerIndex * CARD_STACK_OFFSET;
-                card.style.transform = `translateY(${offset}px)`;
-                card.style.zIndex = playerIndex + 1;
-                
-                isAnimating = false;
-            }, 400);
-        }
-        
-        // Функция для удаления карты с анимацией свайпа
-        function swipeCard(card, diffX, diffY) {
-            if (isAnimating || !card) return;
-            
-            isAnimating = true;
-            
-            const distance = Math.sqrt(diffX * diffX + diffY * diffY);
-            const velocity = distance / (Date.now() - startTime);
-            const angle = Math.atan2(diffY, diffX) * (180 / Math.PI);
-            
-            const multiplier = Math.max(1.5, velocity * 1.5);
-            const targetX = diffX * multiplier;
-            const targetY = diffY * multiplier;
-            const rotation = angle * 0.3;
-            
-            card.style.transition = 'transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.3s';
-            card.style.transform = `translate(${targetX}px, ${targetY}px) rotate(${rotation}deg) scale(0.9)`;
-            card.classList.add('removed');
-            
-            setTimeout(() => {
-                if (card.parentNode) {
-                    card.parentNode.removeChild(card);
-                    goToNextPlayer();
-                    isAnimating = false;
+                card.classList.add('dragging');
+            }, { passive: true });
+
+            card.addEventListener('touchmove', function(e) {
+                if (!e.touches[0] || isAnimating || !canSwipe) return;
+
+                const currentX = e.touches[0].clientX;
+                const currentY = e.touches[0].clientY;
+                const diffX = currentX - touchStartX;
+                const diffY = currentY - touchStartY;
+
+                // Определяем, достаточно ли большое перемещение
+                if (Math.abs(diffX) > 10 || Math.abs(diffY) > 10) {
+                    e.preventDefault();
+                    isSwiping = true;
+                    clickPrevented = true;
+
+                    // Визуальная обратная связь
+                    card.style.transform = `translate(${diffX * 0.3}px, ${diffY * 0.3}px) rotate(${diffX * 0.05}deg)`;
                 }
-            }, 300);
-        }
-        
-        // Функция проверки, можно ли скинуть карту
-        function canSwipeCard(card) {
-            return card && card.classList.contains('flipped') && !card.classList.contains('removed');
-        }
-        
-        // Функция сброса карты на место
-        function resetCardPosition(card) {
-            if (!card) return;
-            
-            const playerIndex = parseInt(card.dataset.playerIndex);
-            const offset = playerIndex * CARD_STACK_OFFSET;
-            
-            card.style.transition = 'transform 0.2s ease';
-            
-            if (card.classList.contains('flipped')) {
-                card.style.transform = `translateY(${offset}px) rotateY(180deg)`;
-                card.style.zIndex = 1000;
-            } else {
-                card.style.transform = `translateY(${offset}px)`;
-                card.style.zIndex = playerIndex + 1;
-            }
-        }
-        
-        // Инициализация игры
-        function initGame() {
-            if (!loadGameSettings()) return;
-            if (!assignRoles()) return;
-            
-            createPlayerCards();
-            setupEventListeners();
-            
-// Добавляем обработчик для кнопки СТАРТ
-startButton.addEventListener('click', function() {
-    window.location.href = 'taimer-game.html';
-});
-        }
-        
-        // Настройка обработчиков событий
-        function setupEventListeners() {
-            cards.forEach(card => {
-                card.addEventListener('click', function(e) {
-                    if (!isSwiping && !isAnimating) {
-                        if (this.classList.contains('flipped')) {
-                            flipCardClose(this);
-                        } else {
-                            flipCardOpen(this);
-                        }
-                    }
-                });
+            }, { passive: false });
+
+            card.addEventListener('touchend', function(e) {
+                card.classList.remove('dragging');
                 
-                card.addEventListener('touchstart', function(e) {
-                    if (!canSwipeCard(this) || isAnimating) return;
-                    
-                    const touch = e.touches[0];
-                    startX = touch.clientX;
-                    startY = touch.clientY;
-                    startTime = Date.now();
-                    currentCard = this;
+                if (!e.changedTouches[0] || !isSwiping || isAnimating || !canSwipe) {
+                    card.style.transform = '';
                     isSwiping = false;
+                    return;
+                }
+
+                const touchEndX = e.changedTouches[0].clientX;
+                const touchEndY = e.changedTouches[0].clientY;
+                const diffX = touchEndX - touchStartX;
+                const diffY = touchEndY - touchStartY;
+
+                // Сброс трансформации
+                card.style.transform = '';
+
+                // Минимальная дистанция свайпа
+                if (Math.abs(diffX) > 50 || Math.abs(diffY) > 50) {
+                    const direction = getSwipeDirection(diffX, diffY);
                     
-                    this.style.transition = 'none';
-                }, { passive: true });
-                
-                card.addEventListener('touchmove', function(e) {
-                    if (!currentCard || !canSwipeCard(currentCard) || isAnimating) return;
+                    // Добавляем соответствующий класс анимации
+                    card.classList.add(`swipe-${direction}`);
                     
-                    const touch = e.touches[0];
-                    currentX = touch.clientX;
-                    currentY = touch.clientY;
-                    
-                    const diffX = currentX - startX;
-                    const diffY = currentY - startY;
-                    
-                    if (!isSwiping && (Math.abs(diffX) > 5 || Math.abs(diffY) > 5)) {
-                        isSwiping = true;
-                    }
-                    
-                    if (isSwiping) {
-                        e.preventDefault();
-                        
-                        const playerIndex = parseInt(this.dataset.playerIndex);
-                        const offset = playerIndex * CARD_STACK_OFFSET;
-                        const rotation = (diffX + diffY) * 0.08;
-                        
-                        this.style.transform = `translateY(${offset}px) rotateY(180deg) translate(${diffX}px, ${diffY}px) rotate(${rotation}deg)`;
-                    }
-                }, { passive: false });
-                
-                card.addEventListener('touchend', function(e) {
-                    if (!currentCard || !canSwipeCard(currentCard) || isAnimating) return;
-                    
-                    const diffX = currentX - startX;
-                    const diffY = currentY - startY;
-                    const distance = Math.sqrt(diffX * diffX + diffY * diffY);
-                    const velocity = distance / (Date.now() - startTime);
-                    
-                    if (isSwiping && (distance > SWIPE_THRESHOLD || velocity > MIN_SWIPE_VELOCITY)) {
-                        swipeCard(this, diffX, diffY);
-                    } else {
-                        resetCardPosition(this);
-                    }
-                    
-                    currentCard = null;
-                    isSwiping = false;
-                }, { passive: true });
-                
-                card.addEventListener('mousedown', function(e) {
-                    if (!canSwipeCard(this) || isAnimating) return;
-                    
-                    startX = e.clientX;
-                    startY = e.clientY;
-                    startTime = Date.now();
-                    currentCard = this;
-                    isSwiping = false;
-                    
-                    this.style.transition = 'none';
-                    this.style.cursor = 'grabbing';
-                });
-                
-                document.addEventListener('mousemove', function(e) {
-                    if (!currentCard || !canSwipeCard(currentCard) || isAnimating) return;
-                    
-                    currentX = e.clientX;
-                    currentY = e.clientY;
-                    
-                    const diffX = currentX - startX;
-                    const diffY = currentY - startY;
-                    
-                    if (!isSwiping && (Math.abs(diffX) > 5 || Math.abs(diffY) > 5)) {
-                        isSwiping = true;
-                    }
-                    
-                    if (isSwiping) {
-                        const playerIndex = parseInt(currentCard.dataset.playerIndex);
-                        const offset = playerIndex * CARD_STACK_OFFSET;
-                        const rotation = (diffX + diffY) * 0.08;
-                        
-                        currentCard.style.transform = `translateY(${offset}px) rotateY(180deg) translate(${diffX}px, ${diffY}px) rotate(${rotation}deg)`;
-                    }
-                });
-                
-                document.addEventListener('mouseup', function() {
-                    if (!currentCard || !canSwipeCard(currentCard) || isAnimating) return;
-                    
-                    const diffX = currentX - startX;
-                    const diffY = currentY - startY;
-                    const distance = Math.sqrt(diffX * diffX + diffY * diffY);
-                    const velocity = distance / (Date.now() - startTime);
-                    
-                    currentCard.style.cursor = 'pointer';
-                    
-                    if (isSwiping && (distance > SWIPE_THRESHOLD || velocity > MIN_SWIPE_VELOCITY)) {
-                        swipeCard(currentCard, diffX, diffY);
-                    } else {
-                        resetCardPosition(currentCard);
-                    }
-                    
-                    currentCard = null;
-                    isSwiping = false;
-                });
-                
-                card.addEventListener('touchcancel', function() {
-                    if (currentCard === this) {
-                        resetCardPosition(this);
-                        currentCard = null;
-                        isSwiping = false;
-                    }
-                });
+                    setTimeout(() => {
+                        card.classList.remove(`swipe-${direction}`);
+                        nextPlayer();
+                    }, 300);
+                }
+
+                isSwiping = false;
             });
+
+            card.addEventListener('touchcancel', function() {
+                card.classList.remove('dragging');
+                card.style.transform = '';
+                isSwiping = false;
+                clickPrevented = false;
+            });
+
+            // Обработчики для правил - ИСПРАВЛЕННЫЙ КОД ТАЙМЕРА
+            document.getElementById('startGameBtn').addEventListener('click', function() {
+                rulesBlock.classList.remove('active');
+                timerScreen.classList.add('active');
+                
+                // --- ИСПРАВЛЕНИЕ ТАЙМЕРА: ВСЕГДА ЗАГРУЖАЕМ АКТУАЛЬНОЕ ВРЕМЯ ---
+                try {
+                    // Загружаем настройки заново, чтобы получить актуальное время
+                    const freshSettings = JSON.parse(localStorage.getItem('spyGameSettings') || '{}');
+                    console.log('Свежие настройки перед стартом таймера:', freshSettings);
+                    
+                    // Обновляем время из настроек
+                    if (freshSettings.selectedMinutes !== undefined) {
+                        timerMinutes = parseInt(freshSettings.selectedMinutes) || 5;
+                    } else if (freshSettings.timer !== undefined) {
+                        timerMinutes = parseInt(freshSettings.timer) || 5;
+                    } else if (freshSettings.time !== undefined) {
+                        timerMinutes = parseInt(freshSettings.time) || 5;
+                    }
+                    
+                    // Дополнительная проверка: если timerMinutes всё ещё не число или равно 0
+                    if (isNaN(timerMinutes) || timerMinutes <= 0) {
+                        timerMinutes = 5;
+                    }
+                    
+                    console.log('Таймер стартует с временем:', timerMinutes, 'минут');
+                    
+                    // Сбрасываем время и UI таймера
+                    timeLeft = timerMinutes * 60;
+                    timerDisplay.textContent = formatTime(timeLeft);
+                    progressBar.style.width = '100%';
+                    
+                    // Останавливаем старый таймер если был
+                    if (timerInterval) {
+                        clearInterval(timerInterval);
+                        timerInterval = null;
+                    }
+                    
+                    timerActive = false;
+                    
+                    // Заполняем список игроков
+                    updatePlayersList();
+                    
+                    // Запускаем таймер
+                    startTimer();
+                    
+                } catch (e) {
+                    console.error('Ошибка при загрузке времени таймера:', e);
+                    // В случае ошибки используем значение по умолчанию
+                    timerMinutes = 5;
+                    timeLeft = 300;
+                    timerDisplay.textContent = '5:00';
+                    progressBar.style.width = '100%';
+                    updatePlayersList();
+                    startTimer();
+                }
+            });
+
+            // Обработчик паузы
+            pauseBtn.addEventListener('click', togglePause);
+
+            // Обработчики модального окна
+            eliminateBtn.addEventListener('click', eliminatePlayer);
             
-            document.addEventListener('contextmenu', function(e) {
-                if (e.target.classList.contains('card')) {
+            modalCloseBtn.addEventListener('click', () => {
+                playerModal.classList.remove('active');
+                if (autoCloseTimeout) clearTimeout(autoCloseTimeout);
+            });
+
+            playerModal.addEventListener('click', (e) => {
+                if (e.target === playerModal) {
+                    playerModal.classList.remove('active');
+                    if (autoCloseTimeout) clearTimeout(autoCloseTimeout);
+                }
+            });
+
+            // Обработчик новой игры
+            newGameBtn.addEventListener('click', () => {
+                window.location.href = 'setting-game.html';
+            });
+
+            // Защита от мультитач и скролла
+            document.addEventListener('touchmove', function(e) {
+                if (e.touches.length > 1) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+
+            document.addEventListener('gesturestart', function(e) {
+                e.preventDefault();
+            });
+
+            document.addEventListener('contextmenu', e => e.preventDefault());
+            document.addEventListener('copy', e => e.preventDefault());
+            document.addEventListener('cut', e => e.preventDefault());
+            document.addEventListener('paste', e => e.preventDefault());
+            
+            document.addEventListener('keydown', e => {
+                if (e.ctrlKey && ['a', 'c', 'x', 'v'].includes(e.key)) {
                     e.preventDefault();
                 }
             });
-        }
-        
-        initGame();
-    });
-</script>
 
+            window.addEventListener('scroll', () => window.scrollTo(0, 0));
+            window.addEventListener('wheel', e => e.preventDefault(), { passive: false });
+
+            // Telegram WebApp поддержка
+            if (window.Telegram?.WebApp) {
+                Telegram.WebApp.ready();
+                Telegram.WebApp.expand();
+                Telegram.WebApp.disableVerticalSwipes?.();
+            }
+
+            // Инициализация
+            updateCurrentPlayer();
+        })();
+    </script>
 </body>
 </html>
