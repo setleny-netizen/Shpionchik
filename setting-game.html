@@ -787,8 +787,8 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Данные
         let players = [];
-        let locationsData = [];          // теперь каждый элемент содержит id, name, locations (массив строк)
-        let selectedLocations = [];       // массив id выбранных наборов
+        let locationsData = [];
+        let selectedLocations = [];
         let selectedEmoji = '😀';
         let selectedSpies = 1;
         let selectedMinutes = 5;
@@ -851,6 +851,18 @@
             }
         }
         
+        // Функция для получения всех локаций из выбранных наборов
+        function getAllLocations() {
+            let allLocations = [];
+            selectedLocations.forEach(id => {
+                const set = locationsData.find(l => l.id === id);
+                if (set && set.locations) {
+                    allLocations = allLocations.concat(set.locations);
+                }
+            });
+            return allLocations;
+        }
+        
         // ---------- Функции сохранения и загрузки ----------
         function saveSettings() {
             // Сохраняем все настройки (внутренний формат страницы)
@@ -861,6 +873,7 @@
                 selectedLocations: selectedLocations
             };
             localStorage.setItem('spySettings', JSON.stringify(settings));
+            console.log('Сохранены настройки:', settings);
         }
 
         function loadSettings() {
@@ -868,9 +881,14 @@
             if (saved) {
                 try {
                     const settings = JSON.parse(saved);
+                    console.log('Загружены настройки:', settings);
+                    
                     if (settings.players) players = settings.players;
                     if (settings.selectedSpies) selectedSpies = settings.selectedSpies;
-                    if (settings.selectedMinutes) selectedMinutes = settings.selectedMinutes;
+                    if (settings.selectedMinutes) {
+                        selectedMinutes = parseInt(settings.selectedMinutes) || 5;
+                        console.log('Загружено время:', selectedMinutes);
+                    }
                     if (settings.selectedLocations) selectedLocations = settings.selectedLocations;
                 } catch (e) {
                     console.error('Ошибка загрузки настроек', e);
@@ -1040,10 +1058,11 @@
                         id: blockId,
                         name: titleText.replace(/\(нажми для раскрытия\)/g, '').trim(),
                         count: locations.length,
-                        locations: locations   // сохраняем сами локации
+                        locations: locations
                     });
                 });
                 
+                console.log('Загружены локации:', locationsData);
                 return locationsData;
             } catch (error) {
                 console.error('Ошибка загрузки локаций:', error);
@@ -1132,24 +1151,37 @@
             const selected = document.querySelector('.spy-modal-option-compact.selected');
             if (selected) {
                 selectedSpies = parseInt(selected.dataset.spies);
+                console.log('Выбрано шпионов:', selectedSpies);
                 updateDisplay();
-                saveSettings(); // сохраняем
+                saveSettings();
             }
             spiesModal.classList.remove('active');
         });
         
-        // Сохранение таймера
+        // Сохранение таймера - ИСПРАВЛЕНО
         saveTimerBtn.addEventListener('click', function() {
             const selected = document.querySelector('.timer-option.selected');
             if (selected) {
                 selectedMinutes = parseInt(selected.dataset.minutes);
+                console.log('ВЫБРАНО ВРЕМЯ ТАЙМЕРА:', selectedMinutes, 'минут (тип:', typeof selectedMinutes + ')');
                 updateDisplay();
-                saveSettings(); // сохраняем
+                saveSettings(); // Сохраняем в spySettings
+                
+                // Сразу сохраняем и в игровой формат для проверки
+                const allLocations = getAllLocations();
+                const gameSettings = {
+                    players: players,
+                    spyCount: selectedSpies,
+                    locations: allLocations,
+                    selectedMinutes: selectedMinutes
+                };
+                localStorage.setItem('spyGameSettings', JSON.stringify(gameSettings));
+                console.log('Сохранено в spyGameSettings:', gameSettings);
             }
             timerModal.classList.remove('active');
         });
         
-        // Сохранение наборов (просто закрываем, список уже в selectedLocations)
+        // Сохранение наборов
         saveLocationsBtn.addEventListener('click', function() {
             updateLocationsList();
             addLocationsModal.classList.remove('active');
@@ -1202,7 +1234,7 @@
             }
         });
         
-        // Кнопка играть – формируем данные для игры
+        // Кнопка играть – ИСПРАВЛЕНО
         playButton.addEventListener('click', function() {
             if (players.length < 3) {
                 alert('Нужно минимум 3 игрока');
@@ -1214,15 +1246,8 @@
             }
             
             // Собираем все локации из выбранных наборов
-            let allLocations = [];
-            selectedLocations.forEach(id => {
-                const set = locationsData.find(l => l.id === id);
-                if (set && set.locations) {
-                    allLocations = allLocations.concat(set.locations);
-                }
-            });
+            let allLocations = getAllLocations();
             
-            // Если вдруг не получилось (например, нет локаций в наборе)
             if (allLocations.length === 0) {
                 alert('В выбранных наборах нет локаций');
                 return;
@@ -1232,10 +1257,20 @@
             const gameSettings = {
                 players: players,
                 spyCount: selectedSpies,
-                locations: allLocations   // массив названий локаций
+                locations: allLocations,
+                selectedMinutes: selectedMinutes
             };
             
+            console.log('=== ПЕРЕХОД В ИГРУ ===');
+            console.log('Время таймера:', selectedMinutes, 'минут');
+            console.log('Полные настройки:', gameSettings);
+            
             localStorage.setItem('spyGameSettings', JSON.stringify(gameSettings));
+            
+            // Проверяем сразу, что сохранилось
+            const saved = localStorage.getItem('spyGameSettings');
+            console.log('Проверка сохранения:', JSON.parse(saved));
+            
             window.location.href = 'game.html';
         });
         
@@ -1258,6 +1293,7 @@
         
         // ---------- Загрузка сохранённых настроек и инициализация ----------
         loadSettings(); // загружаем сохранённые данные
+        console.log('Инициализация. Время:', selectedMinutes);
         
         // Инициализация компонентов
         initTimerScroll();
@@ -1271,7 +1307,7 @@
             if (selectedLocations.length === 0 && locationsData.length > 0) {
                 selectedLocations = [locationsData[0].id];
             } else {
-                // фильтруем выбранные, чтобы остались только существующие (на случай изменения списка)
+                // фильтруем выбранные, чтобы остались только существующие
                 selectedLocations = selectedLocations.filter(id => locationsData.some(l => l.id === id));
                 if (selectedLocations.length === 0 && locationsData.length > 0) {
                     selectedLocations = [locationsData[0].id];
