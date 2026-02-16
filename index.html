@@ -2,345 +2,343 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Шпион - Начать игру</title>
-    
-    <!-- Шпионские шрифты -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Ubuntu+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Шпион - Главная</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="icon" type="image/png" sizes="32x32" href="img/шляпа.png">
     <link rel="apple-touch-icon" sizes="180x180" href="img/шляпа.png">
-    
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
-
+        
         body {
-            font-family: 'Ubuntu Mono', monospace;
-            min-height: 100vh;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            color: white;
-            text-align: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            height: 100vh;
+            width: 100vw;
             overflow: hidden;
+            position: relative;
+            touch-action: pan-y;
+            -webkit-tap-highlight-color: transparent;
+            background-color: #000000;
         }
-
-        /* Фон с размытием */
+        
         .background {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: url('img/fon2.png');
+            background-image: url('img/fon.png');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            z-index: -2;
+            filter: blur(4px);
+            transform: scale(1.05);
+            z-index: 1;
+            pointer-events: none;
         }
-
-        /* Слой для размытия */
-        .blur-overlay {
+        
+        /* Бургер-меню */
+        .menu-container {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.05);
-            backdrop-filter: blur(2px);
-            -webkit-backdrop-filter: blur(10px);
-            z-index: -1;
-        }
-
-        /* КОНТЕЙНЕР ДЛЯ ТРЕХ КАРТ ВЕЕРОМ */
-        .cards-container {
-            position: absolute;
-            top: 40%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100%;
-            height: 420px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1;
-        }
-
-        /* ИГРАЛЬНАЯ КАРТА */
-        .playing-card {
-            position: absolute;
-            width: 220px;
-            height: 330px;
-            background-image: url('img/card2.png');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            border-radius: 16px;
-            border: 4px solid wheat;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
-            filter: brightness(0.8);
-            transition: transform 0.5s ease, z-index 0.5s ease;
-            left: 50%;
-            transform-origin: bottom center;
-        }
-
-        /* РАСПОЛОЖЕНИЕ КАРТ ВЕЕРОМ */
-        .playing-card:nth-child(1) {
-            transform: translateX(-75%) rotate(-7deg);
-            z-index: 1;
-        }
-
-        .playing-card:nth-child(2) {
-            transform: translateX(-50%) rotate(0deg);
-            z-index: 2;
-        }
-
-        .playing-card:nth-child(3) {
-            transform: translateX(-25%) rotate(7deg);
-            z-index: 1;
-        }
-
-        /* Основной контейнер */
-        .container {
-            flex: 1;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
             display: flex;
             flex-direction: column;
-            padding-bottom: max(20px, env(safe-area-inset-bottom));
-            position: relative;
-            z-index: 1;
-        }
-
-        /* Пустое пространство сверху */
-        .spacer {
-            flex: 1;
-        }
-
-        /* Основная кнопка */
-        .main-button-container {
-            padding: 30px 20px 20px 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .main-button {
-            display: inline-block;
-            padding: 18px 40px;
-            background-color: #ffffff;
-            color: rgb(0, 0, 0);
-            text-decoration: none;
-            border-radius: 50px;
-            font-family: 'Russo One', sans-serif;
-            font-size: 2rem;
-            font-weight: 400;
-            border: none;
-            cursor: pointer;
-            min-width: 200px;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-        }
-
-        /* Контейнер для круглых кнопок */
-        .circle-buttons-container {
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            padding: 10px 20px 30px 20px;
             align-items: flex-end;
         }
-
-        /* ПРОЗРАЧНЫЕ КРУГЛЫЕ КНОПКИ */
-        .circle-button {
-            width: 60px;
-            height: 60px;
+        
+        .burger-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
-            border: 2px solid white;
-            cursor: pointer;
+            width: 50px;
+            height: 50px;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: 'Ubuntu Mono', monospace;
-            font-size: 1.5rem;
-            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+        }
+        
+        .burger-button i {
             color: white;
-            background-color: transparent;
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
+            font-size: 24px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
-
-        /* ПОДНЯТЬ СРЕДНИЕ КНОПКИ (2 и 3) */
-        .circle-button:nth-child(2),
-        .circle-button:nth-child(3) {
-            margin-bottom: 15px;
+        
+        .burger-button:active {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(0.95);
         }
-
-        /* АДАПТИВНОСТЬ */
-        @media (max-width: 992px) {
-            .cards-container {
-                top: 38%;
-                height: 350px;
-            }
-            
-            .playing-card {
-                width: 170px;
-                height: 255px;
-                border: 3px solid wheat;
-                border-radius: 14px;
-            }
-            
-            .playing-card:nth-child(1) {
-                transform: translateX(-75%) rotate(-7deg);
-            }
-            
-            .playing-card:nth-child(3) {
-                transform: translateX(-25%) rotate(7deg);
-            }
-            
-            .main-button {
-                padding: 15px 30px;
-                font-size: 1.7rem;
-                min-width: 180px;
-            }
-
-            .circle-buttons-container {
-                gap: 20px;
-                padding: 10px 15px 25px 15px;
-            }
-
-            .circle-button {
-                width: 55px;
-                height: 55px;
-                font-size: 1.4rem;
-            }
-
-            .circle-button:nth-child(2),
-            .circle-button:nth-child(3) {
-                margin-bottom: 12px;
-            }
+        
+        .menu-items {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin-top: 12px;
         }
-
-        @media (max-width: 576px) {
-            .cards-container {
-                top: 45%;
-                height: 280px;
-            }
-            
-            .playing-card {
-                width: 200px;
-                height: 300px;
-                border: 2px solid wheat;
-                border-radius: 12px;
-            }
-            
-            .playing-card:nth-child(1) {
-                transform: translateX(-75%) rotate(-7deg);
-            }
-            
-            .playing-card:nth-child(2) {
-                transform: translateX(-50%) rotate(0deg);
-            }
-            
-            .playing-card:nth-child(3) {
-                transform: translateX(-25%) rotate(7deg);
-            }
-            
-            .circle-buttons-container {
-                gap: 15px;
-                padding: 10px 15px 30px 15px;
-            }
-
-            .circle-button {
-                width: 50px;
-                height: 50px;
-                font-size: 1.3rem;
-            }
-
-            .circle-button:nth-child(2),
-            .circle-button:nth-child(3) {
-                margin-bottom: 10px;
-            }
-            
-            .main-button {
-                padding: 12px 25px;
-                font-size: 1.7rem;
-                min-width: 160px;
-            }
-            
-            .main-button-container {
-                padding: 25px 15px 15px 15px;
-            }
-            
-            .container {
-                padding-bottom: max(40px, env(safe-area-inset-bottom, 40px));
-            }
+        
+        .menu-items.show {
+            display: flex;
         }
-
-        @media (max-width: 400px) {
-            .circle-buttons-container {
-                gap: 12px;
-                padding: 10px 10px 35px 10px;
-            }
-
-            .circle-button {
-                width: 45px;
-                height: 45px;
-                font-size: 1.2rem;
-            }
-
-            .circle-button:nth-child(2),
-            .circle-button:nth-child(3) {
-                margin-bottom: 8px;
-            }
-            
-            .main-button {
-                padding: 10px 20px;
-                font-size: 1.5rem;
-                min-width: 140px;
-            }
+        
+        .menu-item {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+            animation: fadeIn 0.2s ease;
+        }
+        
+        .menu-item i {
+            color: white;
+            font-size: 22px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .menu-item:active {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(0.95);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .content {
+            position: relative;
+            z-index: 2;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 80px 0 40px 0;
+        }
+        
+        .cards-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: auto 0;
+            width: 100%;
+            pointer-events: none;
+            position: relative;
+            height: 240px;
+        }
+        
+        .card {
+            width: 160px;
+            height: auto;
+            display: block;
+            pointer-events: none;
+            border-radius: 15px;
+            border: 1px solid rgba(153, 123, 49, 0.858);
+            position: absolute;
+            left: 50%;
+            margin-left: -80px;
+        }
+        
+        .card:nth-child(1) {
+            transform: rotate(-15deg) translateX(-55px);
+            z-index: 1;
+        }
+        
+        .card:nth-child(2) {
+            transform: rotate(0deg);
+            z-index: 3;
+        }
+        
+        .card:nth-child(3) {
+            transform: rotate(15deg) translateX(55px);
+            z-index: 2;
+        }
+        
+        .button-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            padding-bottom: 30px;
+        }
+        
+        .start-button {
+            background-color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 18px 0;
+            width: 70%;
+            font-size: 22px;
+            font-weight: 700;
+            color: #000000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            letter-spacing: 1px;
+            -webkit-appearance: none;
+            appearance: none;
+            text-align: center;
+        }
+        
+        .start-button:active {
+            background-color: #e0e0e0;
+            transform: scale(0.98);
+        }
+        
+        img {
+            -webkit-user-drag: none;
+            -khtml-user-drag: none;
+            -moz-user-drag: none;
+            -o-user-drag: none;
+        }
+        
+        img, a, button, div, span, p, h1, h2, h3, h4, h5, h6 {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
     </style>
 </head>
-<body>
-    
-<div class="background"></div>
-<div class="blur-overlay"></div>
+<body oncontextmenu="return false;" onselectstart="return false;" ondragstart="return false;">
 
-<div class="cards-container">
-    <div class="playing-card"></div>
-    <div class="playing-card"></div>
-    <div class="playing-card"></div>
-</div>
-    
-<div class="container">
-    <div class="spacer"></div>
-    
-    <div class="main-button-container">
-        <button class="main-button" onclick="window.location.href='settings-game.html'">Начать игру</button>
+    <!-- Бургер-меню -->
+    <div class="menu-container">
+        <div class="burger-button" onclick="toggleMenu()">
+            <i class="fas fa-bars"></i>
+        </div>
+        <div class="menu-items" id="menuItems">
+            <div class="menu-item" onclick="locations()">
+                <i class="fas fa-map-marker-alt"></i>
+            </div>
+            <div class="menu-item" onclick="rules()">
+                <i class="fas fa-book"></i>
+            </div>
+            <div class="menu-item" onclick="settings()">
+                <i class="fas fa-cog"></i>
+            </div>
+        </div>
     </div>
-    
-    <div class="circle-buttons-container">
-        <button class="circle-button" onclick="window.location.href='multiplayer.html'">
-            <i class="fas fa-users"></i>
-        </button>
-        <button class="circle-button" onclick="window.location.href='settings.html'">
-            <i class="fas fa-cog"></i>
-        </button>
-        <button class="circle-button" onclick="window.location.href='locations.html'">
-            <i class="fas fa-location-dot"></i>
-        </button>
-        <button class="circle-button" onclick="window.location.href='rules.html'">
-            <i class="fas fa-book-reader"></i>
-        </button>
-    </div>
-</div>
 
+    <div class="background"></div>
+    
+    <div class="content">
+        <div class="cards-container">
+            <img src="img/card.png" alt="card" class="card" draggable="false">
+            <img src="img/card.png" alt="card" class="card" draggable="false">
+            <img src="img/card.png" alt="card" class="card" draggable="false">
+        </div>
+        
+        <div class="button-container">
+            <button class="start-button" onclick="startGame()">
+                НАЧАТЬ ИГРУ
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Бургер-меню
+        function toggleMenu() {
+            document.getElementById('menuItems').classList.toggle('show');
+        }
+        
+        function locations() {
+            window.location.href = 'locations.html';
+        }
+        
+        function rules() {
+            window.location.href = 'rules.html';
+        }
+        
+        function settings() {
+            window.location.href = 'settings.html';
+        }
+
+        function startGame() {
+            // Переход на страницу настроек игры
+            window.location.href = 'setting-game.html';
+        }
+        
+        // Закрыть меню при клике вне
+        document.addEventListener('click', function(event) {
+            const menuContainer = document.querySelector('.menu-container');
+            const menuItems = document.getElementById('menuItems');
+            
+            if (!menuContainer.contains(event.target) && menuItems.classList.contains('show')) {
+                menuItems.classList.remove('show');
+            }
+        });
+        
+        document.addEventListener('touchmove', function(event) {
+            if (event.touches.length > 1) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+        
+        document.addEventListener('gesturestart', function(event) {
+            event.preventDefault();
+        });
+        
+        document.addEventListener('contextmenu', function(event) {
+            event.preventDefault();
+        });
+        
+        document.addEventListener('copy', function(event) {
+            event.preventDefault();
+        });
+        
+        document.addEventListener('cut', function(event) {
+            event.preventDefault();
+        });
+        
+        document.addEventListener('paste', function(event) {
+            event.preventDefault();
+        });
+        
+        document.addEventListener('keydown', function(event) {
+            if (event.ctrlKey && (event.key === 'a' || event.key === 'c' || event.key === 'x' || event.key === 'v')) {
+                event.preventDefault();
+            }
+        });
+        
+        window.addEventListener('scroll', function() {
+            window.scrollTo(0, 0);
+        });
+        
+        window.addEventListener('wheel', function(event) {
+            event.preventDefault();
+        }, { passive: false });
+
+        if (window.Telegram && Telegram.WebApp) {
+            Telegram.WebApp.ready();
+            Telegram.WebApp.expand();
+            if (Telegram.WebApp.disableVerticalSwipes) {
+                Telegram.WebApp.disableVerticalSwipes();
+            }
+        }
+    </script>
 </body>
 </html>
