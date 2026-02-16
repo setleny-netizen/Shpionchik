@@ -2,23 +2,28 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Правила игры - Шпион</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Шпион - Правила</title>
     
     <!-- Шпионские шрифты -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Ubuntu+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-     <link rel="icon" type="image/x-icon" href="favicon.ico">
-     <link rel="icon" type="image/png" sizes="32x32" href="img/шляпа.png">
-     <link rel="apple-touch-icon" sizes="180x180" href="img/шляпа.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/шляпа.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="img/шляпа.png">
     
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
 
         body {
@@ -27,7 +32,8 @@
             position: relative;
             color: white;
             overflow-x: hidden;
-            padding-bottom: 100px; /* Добавим отступ снизу для body */
+            padding-bottom: 120px;
+            background-color: #000000;
         }
 
         /* Фон с размытием */
@@ -37,24 +43,51 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: url('img/fon2.png');
+            background-image: url('img/fon.png');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
+            filter: blur(4px);
+            transform: scale(1.05);
             z-index: -2;
+            pointer-events: none;
         }
 
-        /* Слой для размытия */
+        /* Слой затемнения */
         .blur-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.05);
-            backdrop-filter: blur(2px);
-            -webkit-backdrop-filter: blur(10px);
+            background: rgba(0, 0, 0, 0.6);
             z-index: -1;
+        }
+
+        /* Фиксированный заголовок */
+        .header-fixed {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 100;
+            padding-top: 20px;
+            padding-bottom: 20px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.6) 80%, transparent 100%);
+        }
+
+        .rules-header-title {
+            font-family: 'Russo One', sans-serif;
+            font-size: 2.5rem;
+            text-align: center;
+            color: white;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .rules-header-title i {
+            color: white;
+            margin-right: 10px;
         }
 
         /* Основной контейнер */
@@ -62,18 +95,10 @@
             max-width: 900px;
             margin: 0 auto;
             padding: 20px;
-            padding-top: 40px;
-            padding-bottom: 10px; /* Увеличил отступ снизу */
-        }
-
-        /* Заголовок */
-        .rules-header-title {
-            font-family: 'Russo One', sans-serif;
-            font-size: 2.5rem;
-            text-align: center;
-            margin-bottom: 40px;
-            color: white;
-            letter-spacing: 1px;
+            padding-top: 100px;
+            padding-bottom: 140px;
+            position: relative;
+            z-index: 1;
         }
 
         /* Секции с правилами */
@@ -83,18 +108,17 @@
 
         /* Блок с правилом */
         .rule-block {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 12px;
-            border: 2px solid rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            background: rgba(10, 10, 20, 0.7);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
             overflow: hidden;
             transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
         }
 
         .rule-block:hover {
-            border-color: rgba(0, 0, 0, 0.3);
-            background: rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(20, 20, 40, 0.8);
         }
 
         /* Кнопка раскрытия */
@@ -107,8 +131,9 @@
             text-align: left;
             cursor: pointer;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
             font-family: 'Ubuntu Mono', monospace;
             font-size: 1.2rem;
             transition: background-color 0.3s ease;
@@ -117,11 +142,20 @@
         }
 
         .rule-block-toggle:hover {
-            background-color: rgba(0, 0, 0, 0.3);
+            background-color: rgba(255, 255, 255, 0.1);
         }
 
         .rule-block-toggle[aria-expanded="true"] {
-            background-color: rgba(0, 0, 0, 0.3);
+            background-color: rgba(255, 255, 255, 0.15);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        /* Контейнер для заголовка и подсказки */
+        .rule-title-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            width: 100%;
         }
 
         /* Заголовок правила */
@@ -132,17 +166,27 @@
             letter-spacing: 0.5px;
             position: relative;
             z-index: 2;
+            margin-bottom: 5px;
+            width: 100%;
+        }
+
+        .rule-title i {
+            color: white;
+            margin-right: 10px;
+            width: 24px;
+            text-align: center;
         }
 
         /* Подсказка */
         .hint {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             opacity: 0.7;
             font-style: italic;
-            margin-left: 10px;
             font-family: 'Ubuntu Mono', monospace;
             position: relative;
             z-index: 2;
+            width: 100%;
+            color: #aaa;
         }
 
         /* Содержимое правила */
@@ -150,7 +194,7 @@
             padding: 0 20px;
             max-height: 0;
             overflow: hidden;
-            transition: max-height 0.3s ease, padding 0.3s ease;
+            transition: max-height 0.4s ease, padding 0.3s ease;
             background-color: rgba(0, 0, 0, 0.3);
             position: relative;
             z-index: 1;
@@ -168,11 +212,23 @@
             font-size: 1rem;
             position: relative;
             z-index: 1;
+            color: white;
         }
 
         .rule-block-content strong {
-            color: #ffcc00;
-            font-weight: bold;
+            color: white;
+            font-weight: 700;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+        }
+
+        .rule-block-content ul {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        .rule-block-content li {
+            margin-bottom: 8px;
+            line-height: 1.5;
         }
 
         /* Кнопка назад */
@@ -188,27 +244,28 @@
         }
 
         .back-button {
-            display: inline-block;
-            padding: 15px 30px;
-            background-color: #ffffff;
-            color: rgb(0, 0, 0);
-            text-decoration: none;
-            border-radius: 50px;
-            font-family: 'Russo One', sans-serif;
-            font-size: 1.5rem;
-            font-weight: 400;
+            background-color: white;
             border: none;
+            border-radius: 8px;
+            padding: 18px 0;
+            width: 70%;
+            font-size: 22px;
+            font-weight: 700;
+            color: #000000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             cursor: pointer;
-            min-width: 200px;
-            text-transform: uppercase;
+            transition: all 0.2s ease;
             letter-spacing: 1px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            -webkit-appearance: none;
+            appearance: none;
+            text-align: center;
+            font-family: 'Russo One', sans-serif;
+            text-transform: uppercase;
         }
 
-        .back-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        .back-button:active {
+            background-color: #e0e0e0;
+            transform: scale(0.98);
         }
 
         /* Анимация появления блоков */
@@ -238,33 +295,27 @@
         @media (max-width: 768px) {
             .rules-container {
                 padding: 15px;
-                padding-top: 30px;
-                padding-bottom: 10px; /* Увеличил для мобильных */
+                padding-top: 90px;
+                padding-bottom: 130px;
             }
             
             body {
-                padding-bottom: 10px; /* Меньше отступ для мобильных */
+                padding-bottom: 100px;
             }
             
             .rules-header-title {
                 font-size: 2rem;
-                margin-bottom: 30px;
             }
             
             .rule-block-toggle {
                 padding: 15px;
-                font-size: 1.1rem;
-                flex-direction: column;
-                align-items: flex-start;
             }
             
             .rule-title {
                 font-size: 1.2rem;
-                margin-bottom: 5px;
             }
             
             .hint {
-                margin-left: 0;
                 font-size: 0.8rem;
             }
             
@@ -277,13 +328,17 @@
             }
             
             .back-button {
-                padding: 12px 25px;
-                font-size: 1.3rem;
-                min-width: 180px;
+                padding: 16px 0;
+                font-size: 20px;
+                width: 70%;
             }
         }
 
         @media (max-width: 480px) {
+            .rules-container {
+                padding-top: 85px;
+            }
+            
             .rules-header-title {
                 font-size: 1.7rem;
             }
@@ -301,35 +356,33 @@
             }
             
             .back-button {
-                padding: 10px 20px;
-                font-size: 1.2rem;
-                min-width: 160px;
-            }
-            
-            .rules-container {
-                padding-bottom: 10px; /* Еще больше для очень маленьких экранов */
-            }
-            
-            body {
-                padding-bottom: 70px;
+                padding: 16px 0;
+                font-size: 20px;
+                width: 70%;
             }
         }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;" onselectstart="return false;" ondragstart="return false;">
     
 <div class="background"></div>
 <div class="blur-overlay"></div>
 
+<!-- Фиксированный заголовок -->
+<div class="header-fixed">
+    <h1 class="rules-header-title"><i class="fas fa-book-reader"></i> ПРАВИЛА</h1>
+</div>
+
 <div class="rules-container">
-    <h1 class="rules-header-title"><i class="fas fa-book-reader"></i> Правила игры</h1>
-    
     <div class="rules-content">
+        <!-- Описание игры -->
         <div class="rule-section">
             <div class="rule-block" id="description-block">
                 <button class="rule-block-toggle" aria-expanded="false" aria-controls="description-content">
-                    <span class="rule-title"><i class="fas fa-book"></i> Описание игры</span>
-                    <span class="hint">(нажми для раскрытия)</span>
+                    <div class="rule-title-container">
+                        <span class="rule-title"><i class="fas fa-book"></i> ОПИСАНИЕ ИГРЫ</span>
+                        <span class="hint">нажми для раскрытия</span>
+                    </div>
                 </button>
                 <div class="rule-block-content" id="description-content" aria-hidden="true" role="region">
                     <p><strong>Шпион</strong> — это игра для компании от 3 человек.</p>
@@ -339,11 +392,14 @@
             </div>
         </div>
         
+        <!-- Процесс игры -->
         <div class="rule-section">
             <div class="rule-block" id="process-block">
                 <button class="rule-block-toggle" aria-expanded="false" aria-controls="process-content">
-                    <span class="rule-title"><i class="fas fa-theater-masks"></i> Процесс игры</span>
-                    <span class="hint">(нажми для раскрытия)</span>
+                    <div class="rule-title-container">
+                        <span class="rule-title"><i class="fas fa-theater-masks"></i> ПРОЦЕСС ИГРЫ</span>
+                        <span class="hint">нажми для раскрытия</span>
+                    </div>
                 </button>
                 <div class="rule-block-content" id="process-content" aria-hidden="true" role="region">
                     <p>Первый игрок задаёт вопрос любому другому.</p>
@@ -356,11 +412,14 @@
             </div>
         </div>
         
+        <!-- Победа мирных -->
         <div class="rule-section">
             <div class="rule-block" id="civilian-win-block">
                 <button class="rule-block-toggle" aria-expanded="false" aria-controls="civilian-win-content">
-                    <span class="rule-title"><i class="fas fa-shield-alt"></i> Победа мирных</span>
-                    <span class="hint">(нажми для раскрытия)</span>
+                    <div class="rule-title-container">
+                        <span class="rule-title"><i class="fas fa-shield-alt"></i> ПОБЕДА МИРНЫХ</span>
+                        <span class="hint">нажми для раскрытия</span>
+                    </div>
                 </button>
                 <div class="rule-block-content" id="civilian-win-content" aria-hidden="true" role="region">
                     <p>Мирные побеждают, если из игры выведен последний шпион.</p>
@@ -368,11 +427,14 @@
             </div>
         </div>
         
+        <!-- Победа шпионов -->
         <div class="rule-section">
             <div class="rule-block" id="spy-win-block">
                 <button class="rule-block-toggle" aria-expanded="false" aria-controls="spy-win-content">
-                    <span class="rule-title"><i class="fas fa-user-secret"></i> Победа шпионов</span>
-                    <span class="hint">(нажми для раскрытия)</span>
+                    <div class="rule-title-container">
+                        <span class="rule-title"><i class="fas fa-user-secret"></i> ПОБЕДА ШПИОНОВ</span>
+                        <span class="hint">нажми для раскрытия</span>
+                    </div>
                 </button>
                 <div class="rule-block-content" id="spy-win-content" aria-hidden="true" role="region">
                     <p>Любой шпион в любой момент прерывает игру и правильно называет локацию.</p>
@@ -382,11 +444,14 @@
             </div>
         </div>
         
+        <!-- Оффлайн раздача карт -->
         <div class="rule-section">
             <div class="rule-block" id="offline-block">
                 <button class="rule-block-toggle" aria-expanded="false" aria-controls="offline-content">
-                    <span class="rule-title"><i class="fas fa-globe + fas fa-ban"></i> Оффлайн раздача карт</span>
-                    <span class="hint">(нажми для раскрытия)</span>
+                    <div class="rule-title-container">
+                        <span class="rule-title"><i class="fas fa-mobile-alt"></i> ОФФЛАЙН РАЗДАЧА</span>
+                        <span class="hint">нажми для раскрытия</span>
+                    </div>
                 </button>
                 <div class="rule-block-content" id="offline-content" aria-hidden="true" role="region">
                     <p>После создания игры на экране появляется набор карточек.</p>
@@ -400,7 +465,9 @@
 </div>
 
 <div class="back-button-container">
-    <button class="back-button" onclick="window.location.href='index.html'">Назад</button>
+    <button class="back-button" onclick="window.location.href='index.html'">
+        НАЗАД
+    </button>
 </div>
 
 <script>
@@ -408,12 +475,13 @@
         const toggleButtons = document.querySelectorAll('.rule-block-toggle');
         
         toggleButtons.forEach(button => {
-            button.addEventListener('click', function() {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                
                 const expanded = this.getAttribute('aria-expanded') === 'true';
                 const content = document.getElementById(this.getAttribute('aria-controls'));
                 const block = this.closest('.rule-block');
                 
-                // Закрываем все другие открытые аккордеоны
                 if (!expanded) {
                     document.querySelectorAll('.rule-block-toggle[aria-expanded="true"]').forEach(openBtn => {
                         if (openBtn !== this) {
@@ -425,46 +493,50 @@
                     });
                 }
                 
-                // Переключаем текущий аккордеон
                 this.setAttribute('aria-expanded', !expanded);
                 content.setAttribute('aria-hidden', expanded);
                 
                 if (!expanded) {
-                    // Открываем аккордеон
-                    content.style.maxHeight = content.scrollHeight + 'px';
+                    content.style.maxHeight = content.scrollHeight + 50 + 'px';
                     
-                    // Плавная прокрутка к элементу с учетом кнопки "Назад"
                     setTimeout(() => {
                         const rect = block.getBoundingClientRect();
-                        const buttonHeight = 80; // Высота кнопки "Назад" с отступами
-                        const isElementFullyVisible = (
-                            rect.top >= 0 &&
-                            rect.bottom <= (window.innerHeight - buttonHeight) // Учитываем высоту кнопки
-                        );
+                        const buttonHeight = 100;
                         
-                        // Если элемент не полностью виден (учитывая кнопку), прокручиваем к нему
-                        if (!isElementFullyVisible || rect.bottom > (window.innerHeight - buttonHeight)) {
-                            // Рассчитываем позицию для прокрутки с запасом
-                            const scrollToPosition = rect.top + window.pageYOffset - 20;
-                            
+                        if (rect.bottom > (window.innerHeight - buttonHeight)) {
                             window.scrollTo({
-                                top: scrollToPosition,
+                                top: rect.top + window.pageYOffset - 30,
                                 behavior: 'smooth'
                             });
                         }
                     }, 50);
                 } else {
-                    // Закрываем аккордеон
                     content.style.maxHeight = null;
                 }
             });
         });
         
-        const ruleSections = document.querySelectorAll('.rule-section');
-        ruleSections.forEach((section, index) => {
-            section.style.animationDelay = (index * 0.1 + 0.1) + 's';
-            section.style.opacity = '1';
+        document.addEventListener('touchmove', function(event) {
+            if (event.touches.length > 1) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+        
+        document.addEventListener('gesturestart', function(event) {
+            event.preventDefault();
         });
+        
+        document.addEventListener('contextmenu', function(event) {
+            event.preventDefault();
+        });
+        
+        if (window.Telegram && Telegram.WebApp) {
+            Telegram.WebApp.ready();
+            Telegram.WebApp.expand();
+            if (Telegram.WebApp.disableVerticalSwipes) {
+                Telegram.WebApp.disableVerticalSwipes();
+            }
+        }
     });
 </script>
 
